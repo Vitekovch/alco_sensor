@@ -39,7 +39,7 @@ GPIO_InitTypeDef GPIO_InitStructure;
 uint32_t i = 0;
 char str_common[50];
 char str_alarm[20];
-uint16_t adcValue;
+uint16_t adcValue[2];
 uint8_t enter_flag = 0;
 uint16_t input_data;
 uint8_t rx_buf[70] = {0};
@@ -66,6 +66,18 @@ uint16_t read_adc()
 	ADC_SoftwareStartConvCmd(ADC1,ENABLE);
 	while(!ADC_GetFlagStatus(ADC1, ADC_FLAG_EOC));
 	return ADC_GetConversionValue(ADC1);
+}
+
+void read_adc_inj()
+{
+  //while(ADC_GetSoftwareStartInjectedConvCmdStatus(ADC1) == SET);
+  ADC_SoftwareStartInjectedConvCmd(ADC1, ENABLE);
+
+  //+ Wait until ADC Channel 8 end of conversion
+  while (ADC_GetFlagStatus(ADC1, ADC_FLAG_JEOC) == RESET);
+	
+	adcValue[0] = ADC_GetInjectedConversionValue(ADC1, ADC_InjectedChannel_1);
+	adcValue[1] = ADC_GetInjectedConversionValue(ADC1, ADC_InjectedChannel_2);
 }
 
 /* Private functions ---------------------------------------------------------*/
@@ -112,11 +124,11 @@ int main(void)
 		{
 			USART_Puts(USART1, "AT\r\n");
 		}
-		adcValue = read_adc();
+		read_adc_inj();
 		STM32vldiscovery_LEDOff(MQ303);
-		snprintf(str_common, sizeof(str_common), "%04d %d\r\n", i, adcValue);
+		snprintf(str_common, sizeof(str_common), "%04d %d %d\r\n", i, adcValue[0], adcValue[1]);
 		USART_Puts(USART2, str_common);
-		if(adcValue > 3000)
+		if(adcValue[0] > 4000)
 		{
 			// for avoidance of multiple sms, gisteresis 
 			if(0 == enter_flag)
