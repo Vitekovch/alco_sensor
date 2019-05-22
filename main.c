@@ -26,6 +26,7 @@
 #include "stm32f10x_adc.h"
 #include "stm32f10x_usart.h"
 #include "alco_init_periph.h"
+#include "alco_led_mng.h"
 
 /** @addtogroup Examples
   * @{
@@ -36,20 +37,18 @@
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 GPIO_InitTypeDef GPIO_InitStructure;
-uint32_t i = 0;
+uint32_t i = 0, helper = 0;
 char str_common[50];
-char str_alarm[20];
+char str_alarm[20] = {0};
 uint16_t adcValue[2];
 uint8_t enter_flag = 0;
+uint8_t sms_flag = 0;
 uint16_t input_data;
 uint8_t rx_buf[70] = {0};
 uint8_t rx_buf_ptr = 0;
 
 /* Private function prototypes -----------------------------------------------*/
-void Delay(__IO uint32_t nCount);
 void USART1_IRQHandler(void);
-void blink_green(void);
-void blink_blue(void);
 
 void USART_Puts(USART_TypeDef *USARTx, volatile char *s)
 {
@@ -100,9 +99,6 @@ int main(void)
   /* Initialize Leds LD3 (C9) and LD4 (C8) mounted on STM32VLDISCOVERY board */
   STM32vldiscovery_LEDInit(LED_GREEN);
   STM32vldiscovery_LEDInit(LED_BLUE);
-
-	// TODO delete MQ303 pin activity
-	STM32vldiscovery_LEDOn(MQ303);
 	
 	Delay(0x1FFFFF);
 	snprintf(str_common, sizeof(str_common), "Start\r\n");
@@ -115,6 +111,10 @@ int main(void)
 	USART_Puts(USART1, "AT\r\n");
 	STM32vldiscovery_LEDOff(LED_GREEN);
 	
+	helper = snprintf(str_alarm, sizeof(str_alarm), "Alconavt%c", 0x1A);
+	USART_Puts(USART2, str_alarm);
+	helper = snprintf(str_alarm, sizeof(str_alarm), " %d %02X %02X ", helper, str_alarm[8], str_alarm[9]);
+	USART_Puts(USART2, str_alarm);
   while (1)
   {
 		blink_blue();
@@ -122,11 +122,10 @@ int main(void)
 		// every 100 cycles check GSM module
 		if((i%50) == 0)
 		{
-			USART_Puts(USART1, "AT\r\n");
+			USART_Puts(USART1, "AT+CSQ\r\n");
 		}
 		read_adc_inj();
-		STM32vldiscovery_LEDOff(MQ303);
-		snprintf(str_common, sizeof(str_common), "%04d %d %d\r\n", i, adcValue[0], adcValue[1]);
+		snprintf(str_common, sizeof(str_common), "%04d %04d %04d\r\n", i, adcValue[0], adcValue[1]);
 		USART_Puts(USART2, str_common);
 		if(adcValue[0] > 4000)
 		{
@@ -136,6 +135,7 @@ int main(void)
 				//USART_Puts(USART1, "AT+CMGS=\"+79992213151\"\r\n");
 				USART_Puts(USART1, "AT+CMGS=\"+79531701527\"\r\n");
 				enter_flag = 1;
+				sms_flag = 1;
       }
 		}
 		else
@@ -143,18 +143,20 @@ int main(void)
 			enter_flag = 0;
 		}
 		
-		if(((rx_buf[rx_buf_ptr-1] == ' ') && (rx_buf[rx_buf_ptr-2] == '>')) ||
-			  ((rx_buf[rx_buf_ptr-1] == 0x0A) && (rx_buf[rx_buf_ptr-2] == 0x0D) && (rx_buf[rx_buf_ptr-3] == 'K') && (rx_buf[rx_buf_ptr-4] == 'O')))
+		if((((rx_buf[rx_buf_ptr-2] == '>') && (rx_buf[rx_buf_ptr-1] == ' ')) && (1 == sms_flag)) ||
+			  ((rx_buf[rx_buf_ptr-4] == 'O') && (rx_buf[rx_buf_ptr-3] == 'K') && (rx_buf[rx_buf_ptr-2] == 0x0D) && (rx_buf[rx_buf_ptr-1] == 0x0A)))
 		{
 			rx_buf[rx_buf_ptr] = '\0';
 			USART_Puts(USART2, (char *)rx_buf);
 			STM32vldiscovery_LEDOn(LED_GREEN);
-			if((rx_buf[rx_buf_ptr-1] == ' ') && (rx_buf[rx_buf_ptr-2] == '>'))
+			Delay(0x1FFFFF);
+			if((rx_buf[rx_buf_ptr-2] == '>') && (rx_buf[rx_buf_ptr-1] == ' '))
 			{
 				char A = 0x1A;
 				blink_green();
 				snprintf(str_alarm, sizeof(str_alarm), "Alconavt%c", A);
 				USART_Puts(USART1, str_alarm);
+				sms_flag = 0;
 			}
 			rx_buf_ptr = 0;
 		}
@@ -163,36 +165,6 @@ int main(void)
 			STM32vldiscovery_LEDOff(LED_GREEN);
 		}
   }
-}
-
-void blink_green(void)
-{
-	STM32vldiscovery_LEDOff(LED_GREEN);
-  Delay(0x1FFFFF);
-  STM32vldiscovery_LEDOn(LED_GREEN);
-  Delay(0x1FFFFF);
-	STM32vldiscovery_LEDOff(LED_GREEN);
-  Delay(0x1FFFFF);
-  STM32vldiscovery_LEDOn(LED_GREEN);
-  Delay(0x1FFFFF);
-}
-
-void blink_blue(void)
-{
-		STM32vldiscovery_LEDOff(LED_BLUE);
-    Delay(0x10FFFF);
-		STM32vldiscovery_LEDOn(LED_BLUE);
-    Delay(0x10FFFF);
-}
-
-/**
-  * @brief  Inserts a delay time.
-  * @param  nCount: specifies the delay time length.
-  * @retval None
-  */
-void Delay(__IO uint32_t nCount)
-{
-  for(; nCount != 0; nCount--);
 }
 
 void USART1_IRQHandler(void)
