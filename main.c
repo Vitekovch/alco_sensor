@@ -111,10 +111,6 @@ int main(void)
 	USART_Puts(USART1, "AT\r\n");
 	STM32vldiscovery_LEDOff(LED_GREEN);
 	
-	helper = snprintf(str_alarm, sizeof(str_alarm), "Alconavt%c", 0x1A);
-	USART_Puts(USART2, str_alarm);
-	helper = snprintf(str_alarm, sizeof(str_alarm), " %d %02X %02X ", helper, str_alarm[8], str_alarm[9]);
-	USART_Puts(USART2, str_alarm);
   while (1)
   {
 		blink_blue();
