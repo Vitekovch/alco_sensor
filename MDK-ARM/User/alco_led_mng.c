@@ -18,20 +18,32 @@ void Delay(__IO uint32_t nCount)
 
 void blink_green(void)
 {
-	STM32vldiscovery_LEDOff(LED_GREEN);
-  Delay(0x1FFFFF);
-  STM32vldiscovery_LEDOn(LED_GREEN);
-  Delay(0x1FFFFF);
-	STM32vldiscovery_LEDOff(LED_GREEN);
-  Delay(0x1FFFFF);
-  STM32vldiscovery_LEDOn(LED_GREEN);
-  Delay(0x1FFFFF);
+	uint8_t i = 0;
+	for (i = 0; i < 5; i++)
+	{
+		STM32vldiscovery_LEDOn(LED_GREEN);
+    Delay(0x0FFFFF);
+	  STM32vldiscovery_LEDOff(LED_GREEN);
+    Delay(0x0FFFFF);
+	}
 }
 
 void blink_blue(void)
 {
-		STM32vldiscovery_LEDOff(LED_BLUE);
-    Delay(0x10FFFF);
+	uint8_t i = 0;
+	for (i = 0; i < 12; i++)
+	{
 		STM32vldiscovery_LEDOn(LED_BLUE);
-    Delay(0x10FFFF);
+		STM32vldiscovery_LEDOn(MAIN_BLUE);
+    Delay(0x0FFFFF);
+	  STM32vldiscovery_LEDOff(LED_BLUE);
+		STM32vldiscovery_LEDOff(MAIN_BLUE);
+    Delay(0x0FFFFF);
+	}
+}
+
+void main_delay(void)
+{
+	Delay(0x04FFFF);
+	Delay(0x04FFFF);
 }

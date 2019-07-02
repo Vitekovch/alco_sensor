@@ -50,9 +50,12 @@
   */
 typedef enum 
 {
-  LED_GREEN = 0,
-  LED_BLUE  = 1,
-	MQ303     = 2,
+  LED_GREEN      = 0,
+  LED_BLUE       = 1,
+	CAMERA         = 2,
+	DOOR           = 3,
+	MAIN_GREEN     = 4,
+	MAIN_BLUE      = 5,
 } Led_TypeDef;
 
 typedef enum 
@@ -79,7 +82,7 @@ typedef enum
 /** @addtogroup STM32vldiscovery_LOW_LEVEL_LED
   * @{
   */
-#define LEDn                             3
+#define LEDn                             6
 #define LED3_PIN                         GPIO_Pin_9  
 #define LED3_GPIO_PORT                   GPIOC
 #define LED3_GPIO_CLK                    RCC_APB2Periph_GPIOC  
@@ -88,9 +91,21 @@ typedef enum
 #define LED4_GPIO_PORT                   GPIOC
 #define LED4_GPIO_CLK                    RCC_APB2Periph_GPIOC
 
-#define MQ303_PIN                        GPIO_Pin_5 
-#define MQ303_GPIO_PORT                  GPIOA
-#define MQ303_GPIO_CLK                   RCC_APB2Periph_GPIOA
+#define CAMERA_PIN                       GPIO_Pin_7 
+#define CAMERA_GPIO_PORT                 GPIOC
+#define CAMERA_GPIO_CLK                  RCC_APB2Periph_GPIOC
+
+#define DOOR_PIN                         GPIO_Pin_6 
+#define DOOR_GPIO_PORT                   GPIOC
+#define DOOR_GPIO_CLK                    RCC_APB2Periph_GPIOC
+
+#define MAIN_GREEN_PIN                   GPIO_Pin_6 
+#define MAIN_GREEN_GPIO_PORT             GPIOB
+#define MAIN_GREEN_GPIO_CLK              RCC_APB2Periph_GPIOB
+
+#define MAIN_BLUE_PIN                    GPIO_Pin_7 
+#define MAIN_BLUE_GPIO_PORT              GPIOB
+#define MAIN_BLUE_GPIO_CLK               RCC_APB2Periph_GPIOB
 
 /**
   * @}
