@@ -56,6 +56,8 @@ typedef enum
 	DOOR           = 3,
 	MAIN_GREEN     = 4,
 	MAIN_BLUE      = 5,
+	COOLER         = 6,
+	GSM            = 7,
 } Led_TypeDef;
 
 typedef enum 
@@ -82,7 +84,7 @@ typedef enum
 /** @addtogroup STM32vldiscovery_LOW_LEVEL_LED
   * @{
   */
-#define LEDn                             6
+#define LEDn                             8
 #define LED3_PIN                         GPIO_Pin_9  
 #define LED3_GPIO_PORT                   GPIOC
 #define LED3_GPIO_CLK                    RCC_APB2Periph_GPIOC  
@@ -107,6 +109,13 @@ typedef enum
 #define MAIN_BLUE_GPIO_PORT              GPIOB
 #define MAIN_BLUE_GPIO_CLK               RCC_APB2Periph_GPIOB
 
+#define COOLER_PIN                       GPIO_Pin_11 
+#define COOLER_GPIO_PORT                 GPIOA
+#define COOLER_GPIO_CLK                  RCC_APB2Periph_GPIOA
+
+#define GSM_PIN                          GPIO_Pin_2 
+#define GSM_GPIO_PORT                    GPIOD
+#define GSM_GPIO_CLK                     RCC_APB2Periph_GPIOD
 /**
   * @}
   */ 

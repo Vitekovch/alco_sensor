@@ -7,5 +7,6 @@ void Delay(__IO uint32_t nCount);
 void blink_green(void);
 void blink_blue(void);
 void main_delay(void);
+void pre_main_delay(void);
 
 #endif

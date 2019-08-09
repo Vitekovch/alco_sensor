@@ -28,6 +28,8 @@
 #include "alco_init_periph.h"
 #include "alco_led_mng.h"
 
+#define COOLER_TIME     (1500)
+
 /** @addtogroup Examples
   * @{
   */
@@ -37,16 +39,17 @@
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 GPIO_InitTypeDef GPIO_InitStructure;
-uint32_t i = 0, helper = 0;
+uint32_t i = 0, cooler_counter = 0;
 char str_common[100];
 uint8_t rx_buf[70] = {0};
 uint8_t rx_buf_ptr = 0;
 uint16_t adcValue[3];
 double BAC_1, BAC_2, BAC_3;
 uint8_t enter_flag_critical = 0, enter_flag = 0;
-uint8_t sms_flag = 0, breath_allow = 1;
+uint8_t sms_flag = 0, breath_allow = 1, cooler_on = 0;
 uint16_t input_data;
 uint8_t good_counter = 0, to_neutral_cnt = 0, candidate = 0, candidate_cnt = 0;
+char str_alarm[20] = {0};
 
 const int mean_num = 20;
 const double alco_critical = 0.225; // mg/L
@@ -89,9 +92,15 @@ int main(void)
 	STM32vldiscovery_LEDOff(LED_GREEN);
 	STM32vldiscovery_LEDOff(MAIN_GREEN);
 	
+	GSM_Pin_Init();
+	pre_main_delay();
+	
   while (1)
   {
 		main_delay();
+		
+		if (i == 40) GSM_power_on();
+		
 		i++;
 		// every 50 cycles check GSM module
 		if((i%50) == 0)
@@ -106,6 +115,10 @@ int main(void)
 		USART_Puts(USART2, str_common);
 		if((BAC_1 > alco_critical) || (BAC_2 > alco_critical) || (BAC_3 > alco_critical))
 		{
+			STM32vldiscovery_LEDOn(COOLER);
+			cooler_on = 1;
+			cooler_counter = 0;
+			
 			to_neutral_cnt = 0;
 			candidate = 0;
 			breath_allow = 0;
@@ -132,6 +145,10 @@ int main(void)
 			breath_allow = 0;
 			if (5 == candidate_cnt)
 			{
+				STM32vldiscovery_LEDOn(COOLER);
+				cooler_on = 1;
+				cooler_counter = 0;
+				
 				candidate = 0;
 				candidate_cnt = 0;
 				door_open();
@@ -168,7 +185,7 @@ int main(void)
 			//snprintf(str_common, sizeof(str_common), "Neutral\r\n");
 	    //USART_Puts(USART2, str_common);
 			to_neutral_cnt++;
-			if (10 == to_neutral_cnt)
+			if (15 == to_neutral_cnt)
 			{
 				enter_flag_critical = 0;
 			  enter_flag = 0;
@@ -185,8 +202,33 @@ int main(void)
     {
 	    math(MQ_1, MQ_2, MQ_3, mean_num, BAC_1, BAC_2, BAC_3);
 	  }
+	
+    if((((rx_buf[rx_buf_ptr-2] == '>') && (rx_buf[rx_buf_ptr-1] == ' ')) && (1 == sms_flag)) ||
+			  ((rx_buf[rx_buf_ptr-4] == 'O') && (rx_buf[rx_buf_ptr-3] == 'K') && (rx_buf[rx_buf_ptr-2] == 0x0D) && (rx_buf[rx_buf_ptr-1] == 0x0A)))
+	  {
+		  rx_buf[rx_buf_ptr] = '\0';
+		  USART_Puts(USART2, (char *)rx_buf);
+		  if((rx_buf[rx_buf_ptr-2] == '>') && (rx_buf[rx_buf_ptr-1] == ' '))
+		  {
+			  char A = 0x1A;
+			  //blink_green();
+			  snprintf(str_alarm, sizeof(str_alarm), "Alconavt%c", A);
+			  USART_Puts(USART1, str_alarm);
+			  sms_flag = 0;
+		  }
+		  rx_buf_ptr = 0;
+	  }
 		
-		send_sms_or_check_gsm_link (&sms_flag, rx_buf, &rx_buf_ptr);
+		if (cooler_on == 1)
+		{
+			cooler_counter++;
+			if (cooler_counter == COOLER_TIME)
+			{
+				cooler_on = 0;
+				cooler_counter = 0;
+				STM32vldiscovery_LEDOff(COOLER);
+			}
+		}
   }
 }
 

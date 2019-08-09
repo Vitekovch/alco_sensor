@@ -47,3 +47,9 @@ void main_delay(void)
 	Delay(0x04FFFF);
 	Delay(0x04FFFF);
 }
+
+void pre_main_delay(void)
+{
+	Delay(0xFFFFFFF);
+	Delay(0xFFFFFFF);
+}

@@ -156,6 +156,15 @@ void GPIO_Door_Pin_Init()
 	GPIO_Init(GPIOC, &GPIO_InitStructure);
 }
 
+void GSM_Pin_Init()
+{
+	RCC_APB2PeriphClockCmd(GSM_GPIO_CLK, ENABLE);
+	GPIO_InitStructure.GPIO_Pin = GSM_PIN;
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_Init(GSM_GPIO_PORT, &GPIO_InitStructure);
+}
+
 void snapshot()
 {
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_7;
@@ -190,6 +199,23 @@ void door_open()
 	GPIO_Init(GPIOC, &GPIO_InitStructure);
 }
 
+void GSM_power_on()
+{
+	GPIO_InitStructure.GPIO_Pin = GSM_PIN;
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_Init(GSM_GPIO_PORT, &GPIO_InitStructure);
+	
+	STM32vldiscovery_LEDOff(GSM);
+	Delay(0xFFFFF0);
+	STM32vldiscovery_LEDOn(GSM);
+	
+	GPIO_InitStructure.GPIO_Pin = GSM_PIN;
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_Init(GSM_GPIO_PORT, &GPIO_InitStructure);
+}
+
 void read_adc_inj(uint16_t *adcValue)
 {
   //while(ADC_GetSoftwareStartInjectedConvCmdStatus(ADC1) == SET);
@@ -216,6 +242,7 @@ void led_init()
   STM32vldiscovery_LEDInit(LED_BLUE);
 	STM32vldiscovery_LEDInit(MAIN_GREEN);
 	STM32vldiscovery_LEDInit(MAIN_BLUE);
+	STM32vldiscovery_LEDInit(COOLER);
 }
 
 void calc_alcohol(uint16_t *adcValue, double *BAC_1, double *BAC_2, double *BAC_3)
