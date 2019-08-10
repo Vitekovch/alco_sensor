@@ -27,6 +27,7 @@
 #include "stm32f10x_usart.h"
 #include "alco_init_periph.h"
 #include "alco_led_mng.h"
+#include "SysTick.h"
 
 #define COOLER_TIME     (1500)
 
@@ -60,6 +61,9 @@ double MQ_2[mean_num];
 double MQ_3[mean_num];
 double mean_1, mean_2, mean_3;
 
+uint32_t ext_dallas_1 = 0, ext_dallas_2 = 0;
+uint8_t ext_dallas_enter_flag = 0;
+
 /* Private function prototypes -----------------------------------------------*/
 void USART1_IRQHandler(void);
 
@@ -72,6 +76,7 @@ void USART1_IRQHandler(void);
   */
 int main(void)
 {
+	uint32_t for_systick = 0, core_value = 0;
 	sdk_Init();
 	USART1_Init();
 	USART2_Init();
@@ -93,11 +98,21 @@ int main(void)
 	STM32vldiscovery_LEDOff(MAIN_GREEN);
 	
 	GSM_Pin_Init();
-	pre_main_delay();
+	
+	if(!SysTickInit(100000, 0, &core_value))
+        while(1);
+	
+	STM32vldiscovery_PBInit(BUTTON_USER, BUTTON_MODE_EXTI);
+	
+	//pre_main_delay();
 	
   while (1)
   {
 		main_delay();
+		
+		for_systick = SysTickGet();
+		snprintf(str_common, sizeof(str_common), "%d %d\r\n", for_systick, core_value);
+		USART_Puts(USART2, str_common);
 		
 		if (i == 40) GSM_power_on();
 		
@@ -240,4 +255,34 @@ void USART1_IRQHandler(void)
 		rx_buf[rx_buf_ptr] = (uint8_t) USART_ReceiveData(USART1);
 		rx_buf_ptr++;
 	}
+}
+
+/**
+  * @brief  This function handles External line0 interrupt request.
+  * @param  None
+  * @retval None
+  */
+void EXTI0_IRQHandler(void)
+{
+  if(EXTI_GetITStatus(USER_BUTTON_EXTI_LINE) != RESET)
+  {
+    /* Toggle LED3 */
+		if (0 == ext_dallas_enter_flag)
+		{
+			ext_dallas_1 = SysTickGet();
+			ext_dallas_enter_flag = 1;
+		}
+		else
+		{
+			ext_dallas_2 = SysTickGet();
+			if ((ext_dallas_2 - ext_dallas_1) < 65)
+			{
+				STM32vldiscovery_LEDOn(LED_BLUE);
+			}
+			ext_dallas_enter_flag = 0;
+		}
+
+    /* Clear the User Button EXTI line pending bit */
+    EXTI_ClearITPendingBit(USER_BUTTON_EXTI_LINE);
+  }
 }

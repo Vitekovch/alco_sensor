@@ -179,15 +179,15 @@ void STM32vldiscovery_PBInit(Button_TypeDef Button, ButtonMode_TypeDef Button_Mo
     EXTI_InitStructure.EXTI_Line = BUTTON_EXTI_LINE[Button];
     EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
 
-    EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising;  
+    EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling;  
 
     EXTI_InitStructure.EXTI_LineCmd = ENABLE;
     EXTI_Init(&EXTI_InitStructure);
 
     /* Enable and set Button EXTI Interrupt to the lowest priority */
     NVIC_InitStructure.NVIC_IRQChannel = BUTTON_IRQn[Button];
-    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x0F;
-    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x0F;
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x02;
+    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x02;
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 
     NVIC_Init(&NVIC_InitStructure); 

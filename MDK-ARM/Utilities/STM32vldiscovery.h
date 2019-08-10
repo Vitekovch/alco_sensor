@@ -128,9 +128,9 @@ typedef enum
 /* * @brief USER push-button
  */
 #define USER_BUTTON_PIN                   GPIO_Pin_0
-#define USER_BUTTON_GPIO_PORT             GPIOA
-#define USER_BUTTON_GPIO_CLK              RCC_APB2Periph_GPIOA
-#define USER_BUTTON_EXTI_PORT_SOURCE      GPIO_PortSourceGPIOA
+#define USER_BUTTON_GPIO_PORT             GPIOB
+#define USER_BUTTON_GPIO_CLK              RCC_APB2Periph_GPIOB
+#define USER_BUTTON_EXTI_PORT_SOURCE      GPIO_PortSourceGPIOB
 #define USER_BUTTON_EXTI_PIN_SOURCE       GPIO_PinSource0
 #define USER_BUTTON_EXTI_LINE             EXTI_Line0
 #define USER_BUTTON_EXTI_IRQn             EXTI0_IRQn
