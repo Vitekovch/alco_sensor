@@ -37,7 +37,7 @@
 // return       - результат инициализации (0 - неудачно, 1 - успешно)
 //==============================================================================
 
-uint8_t SysTickInit(uint32_t frequence, uint8_t uSTimer, uint32_t *SysCore)
+uint8_t SysTickInit(uint32_t frequence, uint8_t uSTimer)
 {
     if(SysTick_Config(SystemCoreClock / frequence))    
         return 0;
@@ -47,8 +47,7 @@ uint8_t SysTickInit(uint32_t frequence, uint8_t uSTimer, uint32_t *SysCore)
     {
         InitDWTCounter();
     }   */ 
-		
-		*SysCore = SystemCoreClock;
+
     return 1;
 }
 

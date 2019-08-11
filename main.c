@@ -46,7 +46,7 @@ uint8_t rx_buf[70] = {0};
 uint8_t rx_buf_ptr = 0;
 uint16_t adcValue[3];
 double BAC_1, BAC_2, BAC_3;
-uint8_t enter_flag_critical = 0, enter_flag = 0;
+uint8_t enter_flag_critical = 0, enter_flag = 0, presense_ok = 0, key_ready = 0;
 uint8_t sms_flag = 0, breath_allow = 1, cooler_on = 0;
 uint16_t input_data;
 uint8_t good_counter = 0, to_neutral_cnt = 0, candidate = 0, candidate_cnt = 0;
@@ -61,8 +61,10 @@ double MQ_2[mean_num];
 double MQ_3[mean_num];
 double mean_1, mean_2, mean_3;
 
-uint32_t ext_dallas_1 = 0, ext_dallas_2 = 0;
-uint8_t ext_dallas_enter_flag = 0;
+uint32_t ext_dallas_1 = 0, ext_dallas_2 = 0, dallas_init = 0, tm_data[3] = {0}, key;
+uint8_t ext_dallas_enter_flag = 0, tm_data_pos = 0;
+
+volatile uint32_t nop_cnt = 0, tm_cnt = 0;
 
 /* Private function prototypes -----------------------------------------------*/
 void USART1_IRQHandler(void);
@@ -76,7 +78,6 @@ void USART1_IRQHandler(void);
   */
 int main(void)
 {
-	uint32_t for_systick = 0, core_value = 0;
 	sdk_Init();
 	USART1_Init();
 	USART2_Init();
@@ -99,7 +100,7 @@ int main(void)
 	
 	GSM_Pin_Init();
 	
-	if(!SysTickInit(100000, 0, &core_value))
+	if(!SysTickInit(100000, 0))
         while(1);
 	
 	STM32vldiscovery_PBInit(BUTTON_USER, BUTTON_MODE_EXTI);
@@ -110,9 +111,16 @@ int main(void)
   {
 		main_delay();
 		
-		for_systick = SysTickGet();
-		snprintf(str_common, sizeof(str_common), "%d %d\r\n", for_systick, core_value);
-		USART_Puts(USART2, str_common);
+		if (1 == key_ready)
+		{
+			key_ready = 0;
+			key = (tm_data[1] << 16) | (tm_data[0] >> 16); 
+			snprintf(str_common, sizeof(str_common), "%08X %08X %08X %d\r\n", tm_data[0], tm_data[1], tm_data[2], key);
+		  USART_Puts(USART2, str_common);
+			tm_data[0] = 0;
+			tm_data[1] = 0;
+			tm_data[2] = 0;
+		}
 		
 		if (i == 40) GSM_power_on();
 		
@@ -262,27 +270,78 @@ void USART1_IRQHandler(void)
   * @param  None
   * @retval None
   */
-void EXTI0_IRQHandler(void)
+void EXTI1_IRQHandler(void)
 {
   if(EXTI_GetITStatus(USER_BUTTON_EXTI_LINE) != RESET)
   {
-    /* Toggle LED3 */
-		if (0 == ext_dallas_enter_flag)
+		if (0 == presense_ok)
 		{
-			ext_dallas_1 = SysTickGet();
-			ext_dallas_enter_flag = 1;
-		}
-		else
-		{
-			ext_dallas_2 = SysTickGet();
-			if ((ext_dallas_2 - ext_dallas_1) < 65)
-			{
-				STM32vldiscovery_LEDOn(LED_BLUE);
-			}
-			ext_dallas_enter_flag = 0;
-		}
-
+			if (GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_1) == 0)
+		  {
+			  /* Toggle LED3 */
+		    if (0 == ext_dallas_enter_flag)
+		    {
+			    ext_dallas_1 = SysTickGet();
+			    ext_dallas_enter_flag = 1;
+		    }
+		    else
+		    {
+			    ext_dallas_2 = SysTickGet();
+			    if ((ext_dallas_2 - ext_dallas_1) < 75)
+			    {
+				    STM32vldiscovery_LEDOn(LED_BLUE);
+					  ext_dallas_enter_flag = 0;
+					  presense_ok = 1;
+			    }
+			    else
+				  {
+					  ext_dallas_1 = ext_dallas_2;
+					  ext_dallas_enter_flag = 1;
+				  }
+		    }
     /* Clear the User Button EXTI line pending bit */
+		  }
+		}
+		else if (1 == presense_ok)
+		{
+      Delay(0x00000003);
+			if (GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_1) == 0)
+			{
+				
+			}
+			else
+			{ 
+				tm_data[tm_data_pos] |= 0x00000001 << tm_cnt;
+			}
+			
+			if ((tm_data_pos == 2) && (tm_cnt == 7))
+			{
+				presense_ok = 0;
+				key_ready = 1;
+				tm_data_pos = 0;
+				tm_cnt = 0;
+				/*if (GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_1) == 0)
+			  {
+				  STM32vldiscovery_LEDOn(LED_BLUE);
+			  }
+			  else
+			  { 
+				  STM32vldiscovery_LEDOff(LED_BLUE);
+			  }*/
+			}
+			else
+			{
+				tm_cnt++;
+				if (32 == tm_cnt)
+			  {
+				  tm_cnt = 0;
+				  tm_data_pos++;
+			  }
+			}
+		}
+		
+    
     EXTI_ClearITPendingBit(USER_BUTTON_EXTI_LINE);
+    
   }
 }

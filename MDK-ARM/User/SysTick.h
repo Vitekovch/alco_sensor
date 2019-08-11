@@ -16,7 +16,7 @@
 //==============================================================================
     
     // Инициализация глобального таймера
-    uint8_t SysTickInit (uint32_t frequence, uint8_t uSTimer, uint32_t *SysCore);
+    uint8_t SysTickInit (uint32_t frequence, uint8_t uSTimer);
 
     // Денициализация глобального таймера
     void SysTickDeinit(void);
