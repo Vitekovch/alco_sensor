@@ -186,8 +186,8 @@ void STM32vldiscovery_PBInit(Button_TypeDef Button, ButtonMode_TypeDef Button_Mo
 
     /* Enable and set Button EXTI Interrupt to the lowest priority */
     NVIC_InitStructure.NVIC_IRQChannel = BUTTON_IRQn[Button];
-    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x02;
-    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x02;
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x01;
+    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x01;
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 
     NVIC_Init(&NVIC_InitStructure); 

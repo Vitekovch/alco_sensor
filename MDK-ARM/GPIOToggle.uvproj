@@ -349,7 +349,7 @@
           </ArmAdsMisc>
           <Cads>
             <interw>1</interw>
-            <Optim>4</Optim>
+            <Optim>2</Optim>
             <oTime>0</oTime>
             <SplitLS>0</SplitLS>
             <OneElfS>1</OneElfS>
@@ -503,6 +503,11 @@
               <FileName>alco_led_mng.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\User\alco_led_mng.c</FilePath>
+            </File>
+            <File>
+              <FileName>SysTick.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\User\SysTick.c</FilePath>
             </File>
           </Files>
         </Group>

@@ -64,7 +64,7 @@ double mean_1, mean_2, mean_3;
 uint32_t ext_dallas_1 = 0, ext_dallas_2 = 0, dallas_init = 0, tm_data[3] = {0}, key;
 uint8_t ext_dallas_enter_flag = 0, tm_data_pos = 0;
 
-volatile uint32_t nop_cnt = 0, tm_cnt = 0;
+volatile uint32_t nop_cnt = 0, tm_cnt = 0, remember_index = 0;
 
 /* Private function prototypes -----------------------------------------------*/
 void USART1_IRQHandler(void);
@@ -94,7 +94,7 @@ int main(void)
 	
 	snprintf(str_common, sizeof(str_common), "Start\r\n");
 	USART_Puts(USART2, str_common);
-	USART_Puts(USART1, "AT\r\n");
+	//USART_Puts(USART1, "AT\r\n");
 	STM32vldiscovery_LEDOff(LED_GREEN);
 	STM32vldiscovery_LEDOff(MAIN_GREEN);
 	
@@ -111,7 +111,7 @@ int main(void)
   {
 		main_delay();
 		
-		if (1 == key_ready)
+		if ((1 == key_ready) && ((i - remember_index) > 3))
 		{
 			key_ready = 0;
 			key = (tm_data[1] << 16) | (tm_data[0] >> 16); 
@@ -120,6 +120,11 @@ int main(void)
 			tm_data[0] = 0;
 			tm_data[1] = 0;
 			tm_data[2] = 0;
+			remember_index = i;
+		}
+		else
+		{
+			key_ready = 0;
 		}
 		
 		if (i == 40) GSM_power_on();
@@ -270,13 +275,13 @@ void USART1_IRQHandler(void)
   * @param  None
   * @retval None
   */
-void EXTI1_IRQHandler(void)
+void EXTI4_IRQHandler(void)
 {
   if(EXTI_GetITStatus(USER_BUTTON_EXTI_LINE) != RESET)
   {
 		if (0 == presense_ok)
 		{
-			if (GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_1) == 0)
+			if (GPIO_ReadInputDataBit(GPIOC, GPIO_Pin_4) == 0)
 		  {
 			  /* Toggle LED3 */
 		    if (0 == ext_dallas_enter_flag)
@@ -287,11 +292,11 @@ void EXTI1_IRQHandler(void)
 		    else
 		    {
 			    ext_dallas_2 = SysTickGet();
-			    if ((ext_dallas_2 - ext_dallas_1) < 75)
+			    if ((ext_dallas_2 - ext_dallas_1) < 85)
 			    {
-				    STM32vldiscovery_LEDOn(LED_BLUE);
 					  ext_dallas_enter_flag = 0;
 					  presense_ok = 1;
+						set_pseudo_mutex(1);
 			    }
 			    else
 				  {
@@ -304,13 +309,9 @@ void EXTI1_IRQHandler(void)
 		}
 		else if (1 == presense_ok)
 		{
-      Delay(0x00000003);
-			if (GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_1) == 0)
+      Delay(0x0000000F);
+			if (GPIO_ReadInputDataBit(GPIOC, GPIO_Pin_4) != 0)
 			{
-				
-			}
-			else
-			{ 
 				tm_data[tm_data_pos] |= 0x00000001 << tm_cnt;
 			}
 			
@@ -320,6 +321,7 @@ void EXTI1_IRQHandler(void)
 				key_ready = 1;
 				tm_data_pos = 0;
 				tm_cnt = 0;
+				set_pseudo_mutex(0);
 				/*if (GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_1) == 0)
 			  {
 				  STM32vldiscovery_LEDOn(LED_BLUE);

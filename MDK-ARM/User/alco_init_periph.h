@@ -24,5 +24,6 @@ void alco_array_init(double *MQ_1, double *MQ_2, double *MQ_3, int mean_num);
 void USART_Puts     (USART_TypeDef *USARTx, volatile char *s);
 void green_light_for_next_breath(uint8_t breath_allow);
 void send_sms_or_check_gsm_link(uint8_t *sms_flag, uint8_t *rx_buf, uint8_t *rx_buf_ptr);
+void set_pseudo_mutex(uint8_t flag);
 
 #endif

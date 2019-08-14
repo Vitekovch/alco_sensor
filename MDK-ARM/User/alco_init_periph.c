@@ -17,6 +17,7 @@ static const double R0_1 = 196.7;
 static const double R0_2 = 552;
 static const double R0_3 = 350;
 static const int    ADC_resolution = 4096;
+static uint8_t wrong_key_avoid_flag = 0;
 
 void sdk_Init(void)
 {
@@ -311,9 +312,16 @@ void USART_Puts(USART_TypeDef *USARTx, volatile char *s)
 {
 	while(*s)
 	{
-		while(!(USARTx->SR & USART_FLAG_TC));
-		USART_SendData(USARTx, *s);
-		*s++;
+		if (wrong_key_avoid_flag == 0)
+		{
+			while(!(USARTx->SR & USART_FLAG_TC));
+		  USART_SendData(USARTx, *s);
+		  *s++;
+		}
+		else
+		{
+			Delay(0x1FFFFF);
+		}
 	}
 }
 
@@ -350,4 +358,9 @@ void send_sms_or_check_gsm_link(uint8_t *sms_flag, uint8_t *rx_buf, uint8_t *rx_
 			}
 			rx_buf_ptr = 0;
 		}
+}
+
+void set_pseudo_mutex(uint8_t flag)
+{
+	wrong_key_avoid_flag = flag;
 }
