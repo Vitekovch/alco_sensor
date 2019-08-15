@@ -28,7 +28,10 @@
 #include "alco_init_periph.h"
 #include "alco_led_mng.h"
 
-#define COOLER_TIME     (1500)
+#define COOLER_TIME         (1500)
+#define TM_UID_OFFSET       (1 + 16)  // byte related to reset/presense (1) + 0x33 command (8) + 0x01 byte (8)
+#define TM_UID_LEN          (32)
+#define ONE_WIRE_PACKET_LEN (72)  // 1 byte command + 8 byte ID
 
 /** @addtogroup Examples
   * @{
@@ -39,7 +42,7 @@
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 GPIO_InitTypeDef GPIO_InitStructure;
-uint32_t i = 0, cooler_counter = 0;
+uint32_t i = 0, cooler_counter = 0, key;
 char str_common[100];
 uint8_t rx_buf[200] = {0};
 uint8_t rx_buf_ptr = 0;
@@ -47,8 +50,8 @@ uint8_t tm_buf[200] = {0};
 uint8_t tm_buf_ptr = 0;
 uint16_t adcValue[3];
 double BAC_1, BAC_2, BAC_3;
-uint8_t enter_flag_critical = 0, enter_flag = 0;
-uint8_t sms_flag = 0, breath_allow = 1, cooler_on = 0;
+uint8_t enter_flag_critical = 0, enter_flag = 0, j, catch_byte = 0;
+uint8_t sms_flag = 0, breath_allow = 1, cooler_on = 0, key_ready = 0;
 uint16_t input_data;
 uint8_t good_counter = 0, to_neutral_cnt = 0, candidate = 0, candidate_cnt = 0, presence_ok = 0;
 char str_alarm[20] = {0};
@@ -76,18 +79,18 @@ void USART1_IRQHandler(void);
 int main(void)
 {
 	sdk_Init();
-	USART3_Init();
-	USART1_Init(9600);
+	USART1_Init();
 	USART2_Init();
+	USART3_Init(9600);
 	
 	ADC1_Init();
 	alco_array_init(MQ_1, MQ_2, MQ_3, mean_num);
 	
-	//USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);
-	//NVIC_EnableIRQ(USART1_IRQn);
+	USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);
+	NVIC_EnableIRQ(USART1_IRQn);
 	
-	//USART_ITConfig(USART3, USART_IT_RXNE, ENABLE);
-	//NVIC_EnableIRQ(USART3_IRQn);
+	USART_ITConfig(USART3, USART_IT_RXNE, ENABLE);
+	NVIC_EnableIRQ(USART3_IRQn);
 
   /* Initialize Leds LD3 (C9) and LD4 (C8) mounted on STM32VLDISCOVERY board */
   led_init();
@@ -96,7 +99,6 @@ int main(void)
 	
 	snprintf(str_common, sizeof(str_common), "Start\r\n");
 	USART_Puts(USART2, str_common);
-	//USART_Puts(USART3, str_common);
 	USART_Puts(USART1, "AT\r\n");
 	STM32vldiscovery_LEDOff(LED_GREEN);
 	STM32vldiscovery_LEDOff(MAIN_GREEN);
@@ -109,6 +111,25 @@ int main(void)
 		main_delay();
 		
 		if (i == 40) GSM_power_on();
+		if (1 == key_ready)
+		{
+			for (j = TM_UID_OFFSET; j < (TM_UID_OFFSET + TM_UID_LEN); j++)
+			{
+				key |= (tm_buf[j] & 0x01) << (j-TM_UID_OFFSET);
+			}
+			if (0 != key)
+			{
+				snprintf(str_common, sizeof(str_common), "%d %02X\r\n", key, catch_byte);
+		    USART_Puts(USART2, str_common);
+			}
+			
+			USART3_Init(9600);
+			USART_ITConfig(USART3, USART_IT_RXNE, ENABLE);
+			
+			key_ready = 0;
+			tm_buf[0] = 0;
+			key = 0;
+		}
 		
 		i++;
 		// every 50 cycles check GSM module
@@ -122,8 +143,6 @@ int main(void)
 		calc_mean(&mean_1, &mean_2, &mean_3, mean_num, MQ_1, MQ_2, MQ_3);
 		snprintf(str_common, sizeof(str_common), "%04d %04d %04d %04d %f %f %f %f %f %f\r\n", i, adcValue[0], adcValue[1], adcValue[2], BAC_1, BAC_2, BAC_3, mean_1, mean_2, mean_3);
 		USART_Puts(USART2, str_common);
-		USART_Puts(USART1, str_common);
-		USART_Puts(USART3, str_common);
 		if((BAC_1 > alco_critical) || (BAC_2 > alco_critical) || (BAC_3 > alco_critical))
 		{
 			STM32vldiscovery_LEDOn(COOLER);
@@ -247,39 +266,20 @@ void USART1_IRQHandler(void)
 {
 	if(USART_GetITStatus(USART1, USART_IT_RXNE) != RESET)
 	{
-		
-		tm_buf[tm_buf_ptr] = (uint8_t) USART_ReceiveData(USART1);
-		
-		if ((0xE0 != tm_buf[tm_buf_ptr]) && (0 == presence_ok))
-		{
-			//USART_ITConfig(USART1, USART_IT_RXNE, DISABLE);
-			tm_buf_ptr++;
-			USART1_Init(230400);
-			presence_ok = 1;
-		}
-		else if (1 == presence_ok)
-		{
-			tm_buf_ptr++;
-		}
-		if ((1 == presence_ok) && (60 == tm_buf_ptr))
-		{
-			tm_buf_ptr += 1;
-		}
-		//USART_ClearITPendingBit(USART1, USART_IT_RXNE);
+		USART_ClearITPendingBit(USART1, USART_IT_RXNE);
+		rx_buf[rx_buf_ptr] = (uint8_t) USART_ReceiveData(USART1);
+		rx_buf_ptr++;
 	}
 }
 
-/*void USART3_IRQHandler(void)
+void USART3_IRQHandler(void)
 {
-	tm_buf_ptr++;
 	if(USART_GetITStatus(USART3, USART_IT_RXNE) != RESET)
 	{
-		
 		tm_buf[tm_buf_ptr] = (uint8_t) USART_ReceiveData(USART3);
-		
-		if ((0xE0 != tm_buf[tm_buf_ptr]) && (0 == presence_ok))
+		if ((0xE0 != tm_buf[tm_buf_ptr]) && (0xFF != tm_buf[tm_buf_ptr]) && (0x00 != tm_buf[tm_buf_ptr]) && (0 == presence_ok))
 		{
-			//USART_ITConfig(USART1, USART_IT_RXNE, DISABLE);
+			catch_byte = tm_buf[tm_buf_ptr];
 			tm_buf_ptr++;
 			USART3_Init(230400);
 			presence_ok = 1;
@@ -288,10 +288,15 @@ void USART1_IRQHandler(void)
 		{
 			tm_buf_ptr++;
 		}
-		if ((1 == presence_ok) && (200 == tm_buf_ptr))
+		if ((1 == presence_ok) && (ONE_WIRE_PACKET_LEN == tm_buf_ptr))
 		{
-			tm_buf_ptr += 1;
+			presence_ok = 0;
+			tm_buf_ptr = 0;
+			key_ready = 1;
+			USART_ITConfig(USART3, USART_IT_RXNE, DISABLE);
+			//USART3_Init(9600);
 		}
-		//USART_ClearITPendingBit(USART1, USART_IT_RXNE);
+		USART_ClearITPendingBit(USART3, USART_IT_RXNE);
+		USART_GetITStatus(USART3, USART_IT_RXNE);
 	}
-}*/
+}
