@@ -43,6 +43,8 @@ uint32_t i = 0, cooler_counter = 0;
 char str_common[100];
 uint8_t rx_buf[200] = {0};
 uint8_t rx_buf_ptr = 0;
+uint8_t tm_buf[200] = {0};
+uint8_t tm_buf_ptr = 0;
 uint16_t adcValue[3];
 double BAC_1, BAC_2, BAC_3;
 uint8_t enter_flag_critical = 0, enter_flag = 0;
@@ -239,22 +241,22 @@ void USART1_IRQHandler(void)
 	if(USART_GetITStatus(USART1, USART_IT_RXNE) != RESET)
 	{
 		
-		rx_buf[rx_buf_ptr] = (uint8_t) USART_ReceiveData(USART1);
+		tm_buf[tm_buf_ptr] = (uint8_t) USART_ReceiveData(USART1);
 		
-		if ((0xE0 != rx_buf[rx_buf_ptr]) && (0 == presence_ok))
+		if ((0xE0 != tm_buf[tm_buf_ptr]) && (0 == presence_ok))
 		{
 			//USART_ITConfig(USART1, USART_IT_RXNE, DISABLE);
-			rx_buf_ptr++;
+			tm_buf_ptr++;
 			USART1_Init(230400);
 			presence_ok = 1;
 		}
 		else if (1 == presence_ok)
 		{
-			rx_buf_ptr++;
+			tm_buf_ptr++;
 		}
-		if ((1 == presence_ok) && (60 == rx_buf_ptr))
+		if ((1 == presence_ok) && (60 == tm_buf_ptr))
 		{
-			rx_buf_ptr += 1;
+			tm_buf_ptr += 1;
 		}
 		//USART_ClearITPendingBit(USART1, USART_IT_RXNE);
 	}
