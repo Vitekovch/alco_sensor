@@ -41,10 +41,8 @@
 GPIO_InitTypeDef GPIO_InitStructure;
 uint32_t i = 0, cooler_counter = 0;
 char str_common[100];
-uint8_t rx_buf[70] = {0};
+uint8_t rx_buf[200] = {0};
 uint8_t rx_buf_ptr = 0;
-uint8_t tm_buf[200] = {0};
-uint8_t tm_buf_ptr = 0;
 uint16_t adcValue[3];
 double BAC_1, BAC_2, BAC_3;
 uint8_t enter_flag_critical = 0, enter_flag = 0;
@@ -63,8 +61,8 @@ double MQ_3[mean_num];
 double mean_1, mean_2, mean_3;
 
 /* Private function prototypes -----------------------------------------------*/
-//void USART1_IRQHandler(void);
-void USART3_IRQHandler(void);
+void USART1_IRQHandler(void);
+//void USART3_IRQHandler(void);
 
 /* Private functions ---------------------------------------------------------*/
 
@@ -76,9 +74,9 @@ void USART3_IRQHandler(void);
 int main(void)
 {
 	sdk_Init();
-	USART1_Init();
+	USART1_Init(9600);
 	USART2_Init();
-	USART3_Init(9600);
+	//USART3_Init(9600);
 	ADC1_Init();
 	alco_array_init(MQ_1, MQ_2, MQ_3, mean_num);
 	
@@ -240,13 +238,29 @@ void USART1_IRQHandler(void)
 {
 	if(USART_GetITStatus(USART1, USART_IT_RXNE) != RESET)
 	{
-		USART_ClearITPendingBit(USART1, USART_IT_RXNE);
+		
 		rx_buf[rx_buf_ptr] = (uint8_t) USART_ReceiveData(USART1);
-		rx_buf_ptr++;
+		
+		if ((0xE0 != rx_buf[rx_buf_ptr]) && (0 == presence_ok))
+		{
+			//USART_ITConfig(USART1, USART_IT_RXNE, DISABLE);
+			rx_buf_ptr++;
+			USART1_Init(230400);
+			presence_ok = 1;
+		}
+		else if (1 == presence_ok)
+		{
+			rx_buf_ptr++;
+		}
+		if ((1 == presence_ok) && (60 == rx_buf_ptr))
+		{
+			rx_buf_ptr += 1;
+		}
+		//USART_ClearITPendingBit(USART1, USART_IT_RXNE);
 	}
 }
 
-void USART3_IRQHandler(void)
+/*void USART3_IRQHandler(void)
 {
 	tm_buf_ptr++;
 	if(USART_GetITStatus(USART3, USART_IT_RXNE) != RESET)
@@ -271,4 +285,4 @@ void USART3_IRQHandler(void)
 		}
 		//USART_ClearITPendingBit(USART1, USART_IT_RXNE);
 	}
-}
+}*/
