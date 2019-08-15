@@ -93,7 +93,7 @@ int main(void)
 	STM32vldiscovery_LEDOff(MAIN_GREEN);
 	
 	GSM_Pin_Init();
-	pre_main_delay();
+	//pre_main_delay();
 	
   while (1)
   {
