@@ -76,14 +76,18 @@ void USART1_IRQHandler(void);
 int main(void)
 {
 	sdk_Init();
+	USART3_Init();
 	USART1_Init(9600);
 	USART2_Init();
-	//USART3_Init(9600);
+	
 	ADC1_Init();
 	alco_array_init(MQ_1, MQ_2, MQ_3, mean_num);
 	
-	USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);
-	NVIC_EnableIRQ(USART1_IRQn);
+	//USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);
+	//NVIC_EnableIRQ(USART1_IRQn);
+	
+	//USART_ITConfig(USART3, USART_IT_RXNE, ENABLE);
+	//NVIC_EnableIRQ(USART3_IRQn);
 
   /* Initialize Leds LD3 (C9) and LD4 (C8) mounted on STM32VLDISCOVERY board */
   led_init();
@@ -92,6 +96,7 @@ int main(void)
 	
 	snprintf(str_common, sizeof(str_common), "Start\r\n");
 	USART_Puts(USART2, str_common);
+	//USART_Puts(USART3, str_common);
 	USART_Puts(USART1, "AT\r\n");
 	STM32vldiscovery_LEDOff(LED_GREEN);
 	STM32vldiscovery_LEDOff(MAIN_GREEN);
@@ -117,6 +122,8 @@ int main(void)
 		calc_mean(&mean_1, &mean_2, &mean_3, mean_num, MQ_1, MQ_2, MQ_3);
 		snprintf(str_common, sizeof(str_common), "%04d %04d %04d %04d %f %f %f %f %f %f\r\n", i, adcValue[0], adcValue[1], adcValue[2], BAC_1, BAC_2, BAC_3, mean_1, mean_2, mean_3);
 		USART_Puts(USART2, str_common);
+		USART_Puts(USART1, str_common);
+		USART_Puts(USART3, str_common);
 		if((BAC_1 > alco_critical) || (BAC_2 > alco_critical) || (BAC_3 > alco_critical))
 		{
 			STM32vldiscovery_LEDOn(COOLER);

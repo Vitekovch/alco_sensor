@@ -137,12 +137,10 @@ void USART2_Init(void)
 	USART_Cmd(USART2, ENABLE);
 }
 
-void USART3_Init(uint32_t baudrate)
+void USART3_Init()
 {
-	NVIC_InitTypeDef NVIC_InitStructure;
 	// Init USART
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
-	RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
@@ -153,8 +151,8 @@ void USART3_Init(uint32_t baudrate)
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_Init(GPIOB, &GPIO_InitStructure);
 	
-	RCC_APB2PeriphClockCmd(RCC_APB1Periph_USART3, ENABLE);
-	USART_InitStruct.USART_BaudRate = baudrate;
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART3, ENABLE);
+	USART_InitStruct.USART_BaudRate = 9600;
 	USART_InitStruct.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
   USART_InitStruct.USART_Mode = USART_Mode_Tx | USART_Mode_Rx;
 	USART_InitStruct.USART_Parity = USART_Parity_No;
@@ -162,13 +160,6 @@ void USART3_Init(uint32_t baudrate)
 	USART_InitStruct.USART_WordLength = USART_WordLength_8b;
 	USART_Init(USART3, &USART_InitStruct);
 	USART_Cmd(USART3, ENABLE);
-	
-	USART_ITConfig(USART3, USART_IT_RXNE, ENABLE);
-  NVIC_InitStructure.NVIC_IRQChannel = USART3_IRQn;
-  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x0F;
-  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x0F;
-  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-  NVIC_Init(&NVIC_InitStructure);
 }
 
 // TODO change for common usage
