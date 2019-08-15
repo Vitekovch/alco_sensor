@@ -42,7 +42,7 @@
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 GPIO_InitTypeDef GPIO_InitStructure;
-uint32_t i = 0, cooler_counter = 0, key;
+uint32_t i = 0, cooler_counter = 0, key, key_for_gsm;
 char str_common[100];
 uint8_t rx_buf[200] = {0};
 uint8_t rx_buf_ptr = 0;
@@ -67,7 +67,7 @@ double mean_1, mean_2, mean_3;
 
 /* Private function prototypes -----------------------------------------------*/
 void USART1_IRQHandler(void);
-//void USART3_IRQHandler(void);
+void USART3_IRQHandler(void);
 
 /* Private functions ---------------------------------------------------------*/
 
@@ -104,7 +104,7 @@ int main(void)
 	STM32vldiscovery_LEDOff(MAIN_GREEN);
 	
 	GSM_Pin_Init();
-	//pre_main_delay();
+	pre_main_delay();
 	
   while (1)
   {
@@ -119,8 +119,9 @@ int main(void)
 			}
 			if (0 != key)
 			{
-				snprintf(str_common, sizeof(str_common), "%d %02X\r\n", key, catch_byte);
+				snprintf(str_common, sizeof(str_common), "%d\r\n--------\r\n%02X\r\n", key, catch_byte);
 		    USART_Puts(USART2, str_common);
+				key_for_gsm = key;
 			}
 			
 			USART3_Init(9600);
@@ -242,7 +243,7 @@ int main(void)
 		  {
 			  char A = 0x1A;
 			  //blink_green();
-			  snprintf(str_alarm, sizeof(str_alarm), "Alconavt%c", A);
+			  snprintf(str_alarm, sizeof(str_alarm), "%d alconavt%c", key_for_gsm, A);
 			  USART_Puts(USART1, str_alarm);
 			  sms_flag = 0;
 		  }
