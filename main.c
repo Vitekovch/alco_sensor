@@ -150,159 +150,159 @@ int main(void)
                 snapshot();
                 snprintf(str_common, sizeof(str_common), "Critical\r\n");
                 USART_Puts(USART2, str_common);
-				        USART_Puts(USART1, "AT+CMGS=\"+79992213151\"\r\n");
-				        //USART_Puts(USART1, "AT+CMGS=\"+79531701527\"\r\n");
-				        enter_flag_critical = 1;
-				        sms_flag = 1;
-				        STM32vldiscovery_LEDOff(LED_GREEN);
-				        STM32vldiscovery_LEDOff(MAIN_GREEN);
-				        blink_blue();
+                USART_Puts(USART1, "AT+CMGS=\"+79992213151\"\r\n");
+                //USART_Puts(USART1, "AT+CMGS=\"+79531701527\"\r\n");
+                enter_flag_critical = 1;
+                sms_flag = 1;
+                STM32vldiscovery_LEDOff(LED_GREEN);
+                STM32vldiscovery_LEDOff(MAIN_GREEN);
+                blink_blue();
             }
-		    }
-		    else if (1 == candidate)
-		    {
-					  #if PRINT_HARD_DEBUG
-			          snprintf(str_common, sizeof(str_common), "Candidate\r\n");
-	              USART_Puts(USART2, str_common);
-					  #endif
-					  
-			      candidate_cnt++;
-			      breath_allow = 0;
-			      if (5 == candidate_cnt)
-			      {
-				        STM32vldiscovery_LEDOn(COOLER);
-				        cooler_on = 1;
-				        cooler_counter = 0;
-				
-				        candidate = 0;
-				        candidate_cnt = 0;
-				        door_open();
-				        blink_green();
-				        alco_array_init(MQ_1, MQ_2, MQ_3, mean_num);
-				        snprintf(str_common, sizeof(str_common), "Door open %d\r\n", key_for_gsm);
-	              USART_Puts(USART2, str_common);
-			      }
-		    }
-		    else if((((BAC_1 - mean_1) > alco_door_open) && ((BAC_2 - mean_2) > alco_door_open)) ||
-			          (((BAC_2 - mean_2) > alco_door_open) && ((BAC_3 - mean_3) > alco_door_open)) ||
-		            (((BAC_1 - mean_1) > alco_door_open) && ((BAC_3 - mean_3) > alco_door_open)))
-		    {
-					  #if PRINT_HARD_DEBUG
-			          snprintf(str_common, sizeof(str_common), "State 3\r\n");
-	              USART_Puts(USART2, str_common);
-					  #endif
-					  
-			      to_neutral_cnt = 0;
-			
-			      if (0 == enter_flag_critical)
-			      {
-				        good_counter++;
-							  #if PRINT_HARD_DEBUG
-				            snprintf(str_common, sizeof(str_common), "good_counter = %d\r\n", good_counter);
-	                  USART_Puts(USART2, str_common);
-							  #endif
-							  
-			          if (5 == good_counter)
-			          {
-					          breath_allow = 0;
-				            good_counter = 0;
-					          candidate = 1;
-			          }
-			          enter_flag = 1;
-			      }
-		    }
-		    else
-		    {   
-					  #if PRINT_HARD_DEBUG
-		            snprintf(str_common, sizeof(str_common), "Neutral\r\n");
-	              USART_Puts(USART2, str_common);
-					  #endif
-					  
-			      to_neutral_cnt++;
-			      if (15 == to_neutral_cnt)
-			      {
-				        enter_flag_critical = 0;
-			          enter_flag = 0;
-			          to_neutral_cnt = 0;
-				        good_counter = 0;
-				        candidate = 0;
-				        breath_allow = 1;
-			      }
-		    }
-		
-		    green_light_for_next_breath(breath_allow);
-		
-		    if((0 == enter_flag) && (0 == enter_flag_critical))
+        }
+        else if (1 == candidate)
         {
-	          math(MQ_1, MQ_2, MQ_3, mean_num, BAC_1, BAC_2, BAC_3);
-	      }
-	
+            #if PRINT_HARD_DEBUG
+                snprintf(str_common, sizeof(str_common), "Candidate\r\n");
+                USART_Puts(USART2, str_common);
+            #endif
+
+            candidate_cnt++;
+            breath_allow = 0;
+            if (5 == candidate_cnt)
+            {
+                STM32vldiscovery_LEDOn(COOLER);
+                cooler_on = 1;
+                cooler_counter = 0;
+				
+                candidate = 0;
+                candidate_cnt = 0;
+                door_open();
+                blink_green();
+                alco_array_init(MQ_1, MQ_2, MQ_3, mean_num);
+                snprintf(str_common, sizeof(str_common), "Door open %d\r\n", key_for_gsm);
+                USART_Puts(USART2, str_common);
+            }
+        }
+        else if((((BAC_1 - mean_1) > alco_door_open) && ((BAC_2 - mean_2) > alco_door_open)) ||
+                (((BAC_2 - mean_2) > alco_door_open) && ((BAC_3 - mean_3) > alco_door_open)) ||
+                (((BAC_1 - mean_1) > alco_door_open) && ((BAC_3 - mean_3) > alco_door_open)))
+        {
+            #if PRINT_HARD_DEBUG
+                snprintf(str_common, sizeof(str_common), "State 3\r\n");
+                USART_Puts(USART2, str_common);
+            #endif
+
+            to_neutral_cnt = 0;
+
+            if (0 == enter_flag_critical)
+            {
+                good_counter++;
+                #if PRINT_HARD_DEBUG
+                    snprintf(str_common, sizeof(str_common), "good_counter = %d\r\n", good_counter);
+                    USART_Puts(USART2, str_common);
+                #endif
+
+                if (5 == good_counter)
+                {
+                    breath_allow = 0;
+                    good_counter = 0;
+                    candidate = 1;
+                }
+                enter_flag = 1;
+            }
+        }
+        else
+        {   
+            #if PRINT_HARD_DEBUG
+                snprintf(str_common, sizeof(str_common), "Neutral\r\n");
+                USART_Puts(USART2, str_common);
+            #endif
+
+            to_neutral_cnt++;
+            if (15 == to_neutral_cnt)
+            {
+                enter_flag_critical = 0;
+                enter_flag = 0;
+                to_neutral_cnt = 0;
+                good_counter = 0;
+                candidate = 0;
+                breath_allow = 1;
+            }
+        }
+
+        green_light_for_next_breath(breath_allow);
+
+        if((0 == enter_flag) && (0 == enter_flag_critical))
+        {
+            math(MQ_1, MQ_2, MQ_3, mean_num, BAC_1, BAC_2, BAC_3);
+        }
+
         if((((rx_buf[rx_buf_ptr-2] == '>') && (rx_buf[rx_buf_ptr-1] == ' ')) && (1 == sms_flag)) ||
-			      ((rx_buf[rx_buf_ptr-4] == 'O') && (rx_buf[rx_buf_ptr-3] == 'K') &&
-		         (rx_buf[rx_buf_ptr-2] == 0x0D) && (rx_buf[rx_buf_ptr-1] == 0x0A)))
-	      {
-		        rx_buf[rx_buf_ptr] = '\0';
-		        USART_Puts(USART2, (char *)rx_buf);
-		        if((rx_buf[rx_buf_ptr-2] == '>') && (rx_buf[rx_buf_ptr-1] == ' '))
-		        {
-			          char A = 0x1A;
-							  #if PRINT_HARD_DEBUG
-			              blink_green();
-							  #endif
-			          snprintf(str_alarm, sizeof(str_alarm), "%d alconavt%c", key_for_gsm, A);
-			          USART_Puts(USART1, str_alarm);
-			          sms_flag = 0;
-		        }
-		        rx_buf_ptr = 0;
-	      }
-		
-		    if (cooler_on == 1)
-		    {
-			      cooler_counter++;
-			      if (cooler_counter == COOLER_TIME)
-			      {
-				        cooler_on = 0;
-				        cooler_counter = 0;
-				        STM32vldiscovery_LEDOff(COOLER);
-			      }
-		    }
+            ((rx_buf[rx_buf_ptr-4] == 'O') && (rx_buf[rx_buf_ptr-3] == 'K') &&
+             (rx_buf[rx_buf_ptr-2] == 0x0D) && (rx_buf[rx_buf_ptr-1] == 0x0A)))
+        {
+            rx_buf[rx_buf_ptr] = '\0';
+            USART_Puts(USART2, (char *)rx_buf);
+            if((rx_buf[rx_buf_ptr-2] == '>') && (rx_buf[rx_buf_ptr-1] == ' '))
+            {
+                char A = 0x1A;
+                #if PRINT_HARD_DEBUG
+                    blink_green();
+                #endif
+                snprintf(str_alarm, sizeof(str_alarm), "%d alconavt%c", key_for_gsm, A);
+                USART_Puts(USART1, str_alarm);
+                sms_flag = 0;
+            }
+            rx_buf_ptr = 0;
+        }
+
+        if (cooler_on == 1)
+        {
+            cooler_counter++;
+            if (cooler_counter == COOLER_TIME)
+            {
+                cooler_on = 0;
+                cooler_counter = 0;
+                STM32vldiscovery_LEDOff(COOLER);
+            }
+        }
     }
 }
 
 void USART1_IRQHandler(void)
 {
-	  if(USART_GetITStatus(USART1, USART_IT_RXNE) != RESET)
-	  {
-		    USART_ClearITPendingBit(USART1, USART_IT_RXNE);
-		    rx_buf[rx_buf_ptr] = (uint8_t) USART_ReceiveData(USART1);
-		    rx_buf_ptr++;
-	  }
+    if(USART_GetITStatus(USART1, USART_IT_RXNE) != RESET)
+    {
+        USART_ClearITPendingBit(USART1, USART_IT_RXNE);
+        rx_buf[rx_buf_ptr] = (uint8_t) USART_ReceiveData(USART1);
+        rx_buf_ptr++;
+    }
 }
 
 void USART3_IRQHandler(void)
 {
-	  if(USART_GetITStatus(USART3, USART_IT_RXNE) != RESET)
-	  {
-		    tm_buf[tm_buf_ptr] = (uint8_t) USART_ReceiveData(USART3);
-		    if ((0xE0 != tm_buf[tm_buf_ptr]) && (0xFF != tm_buf[tm_buf_ptr]) && (0x00 != tm_buf[tm_buf_ptr]) && (0 == presence_ok))
-		    {
-			      catch_byte = tm_buf[tm_buf_ptr];
-			      tm_buf_ptr++;
-			      USART3_Init(230400);
-			      presence_ok = 1;
-		    }
-		    else if (1 == presence_ok)
-		    {
-			    tm_buf_ptr++;
-		    }
-		    if ((1 == presence_ok) && (ONE_WIRE_PACKET_LEN == tm_buf_ptr))
-		    {
-			      presence_ok = 0;
-			      tm_buf_ptr = 0;
-			      key_ready = 1;
-			      USART_ITConfig(USART3, USART_IT_RXNE, DISABLE);
-			     //USART3_Init(9600);
-		    }
-		    USART_ClearITPendingBit(USART3, USART_IT_RXNE);
-	  }
+    if(USART_GetITStatus(USART3, USART_IT_RXNE) != RESET)
+    {
+        tm_buf[tm_buf_ptr] = (uint8_t) USART_ReceiveData(USART3);
+        if ((0xE0 != tm_buf[tm_buf_ptr]) && (0xFF != tm_buf[tm_buf_ptr]) && (0x00 != tm_buf[tm_buf_ptr]) && (0 == presence_ok))
+        {
+            catch_byte = tm_buf[tm_buf_ptr];
+            tm_buf_ptr++;
+            USART3_Init(230400);
+            presence_ok = 1;
+        }
+        else if (1 == presence_ok)
+        {
+            tm_buf_ptr++;
+        }
+        if ((1 == presence_ok) && (ONE_WIRE_PACKET_LEN == tm_buf_ptr))
+        {
+            presence_ok = 0;
+            tm_buf_ptr = 0;
+            key_ready = 1;
+            USART_ITConfig(USART3, USART_IT_RXNE, DISABLE);
+            //USART3_Init(9600);
+        }
+        USART_ClearITPendingBit(USART3, USART_IT_RXNE);
+    }
 }
