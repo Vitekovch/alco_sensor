@@ -66,90 +66,90 @@ void USART3_IRQHandler(void);
 int main(void)
 {
     sdk_Init();
-	  USART1_Init();
-	  USART2_Init();
-	  USART3_Init(9600);
-	  ADC1_Init();
-	  alco_array_init(MQ_1, MQ_2, MQ_3, mean_num);
+    USART1_Init();
+    USART2_Init();
+    USART3_Init(9600);
+    ADC1_Init();
+    alco_array_init(MQ_1, MQ_2, MQ_3, mean_num);
 	
-	  USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);
-	  NVIC_EnableIRQ(USART1_IRQn);
-	  USART_ITConfig(USART3, USART_IT_RXNE, ENABLE);
-	  NVIC_EnableIRQ(USART3_IRQn);
+    USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);
+    NVIC_EnableIRQ(USART1_IRQn);
+    USART_ITConfig(USART3, USART_IT_RXNE, ENABLE);
+    NVIC_EnableIRQ(USART3_IRQn);
 
     /* Initialize Leds LD3 (C9) and LD4 (C8) mounted on STM32VLDISCOVERY board */
     led_init();
-	  GPIO_Camera_Pin_Init();
-	  GPIO_Door_Pin_Init();
+    GPIO_Camera_Pin_Init();
+    GPIO_Door_Pin_Init();
 	
-	  snprintf(str_common, sizeof(str_common), "Start\r\n");
-	  USART_Puts(USART2, str_common);
-	  USART_Puts(USART1, "AT\r\n");
-	  STM32vldiscovery_LEDOff(LED_GREEN);
-	  STM32vldiscovery_LEDOff(MAIN_GREEN);
+    snprintf(str_common, sizeof(str_common), "Start\r\n");
+    USART_Puts(USART2, str_common);
+    USART_Puts(USART1, "AT\r\n");
+    STM32vldiscovery_LEDOff(LED_GREEN);
+    STM32vldiscovery_LEDOff(MAIN_GREEN);
 	
-	  GSM_Pin_Init();
-	  //pre_main_delay();
+    GSM_Pin_Init();
+    //pre_main_delay();
 	
     while (1)
     {
-		    main_delay();
-			  i++;
+        main_delay();
+        i++;
 		
-		    if (1 == key_ready)
-		    {
-			      for (j = TM_UID_OFFSET; j < (TM_UID_OFFSET + TM_UID_LEN); j++)
-			      {
-							  // take bit in the middle 0x08 = 0b00001000
-				        key |= ((tm_buf[j] & 0x08) >> 3) << (j-TM_UID_OFFSET);
-			      }
-			      if (0 != key)
-			      {
-				        snprintf(str_common, sizeof(str_common), "--------\r\n%d\r\n--------\r\n", key);
-		            USART_Puts(USART2, str_common);
-							  #if PRINT_HARD_DEBUG
-			              snprintf(str_common, sizeof(str_common), "%02X\r\n", catch_byte);
-	                  USART_Puts(USART2, str_common);
-					      #endif
-				        key_for_gsm = key;
-			      }
-			
-			      USART3_Init(9600);
-			      USART_ITConfig(USART3, USART_IT_RXNE, ENABLE);
-			
-			      key_ready = 0;
-			      tm_buf[0] = 0;
-			      key = 0;
-		    }
-				
-				if (i == 40) GSM_power_on();
-		
-		    // every 50 cycles check GSM module
-		    if((i%50) == 0)
-		    {
-			      USART_Puts(USART1, "AT+CSQ\r\n");
-		    }
-		    read_adc_inj(adcValue);
-		    // convert to BAC in mg/L
-		    calc_alcohol(adcValue, &BAC_1, &BAC_2, &BAC_3);
-		    calc_mean(&mean_1, &mean_2, &mean_3, mean_num, MQ_1, MQ_2, MQ_3);
-		    snprintf(str_common, sizeof(str_common), "%04d %04d %04d %04d %f %f %f %f %f %f\r\n", i, adcValue[0], adcValue[1], adcValue[2], BAC_1, BAC_2, BAC_3, mean_1, mean_2, mean_3);
-		    USART_Puts(USART2, str_common);
-		    if((BAC_1 > alco_critical) || (BAC_2 > alco_critical) || (BAC_3 > alco_critical))
-		    {
-			      STM32vldiscovery_LEDOn(COOLER);
-			      cooler_on = 1;
-			      cooler_counter = 0;
-			
-			      to_neutral_cnt = 0;
-			      candidate = 0;
-			      breath_allow = 0;
-			      // for avoidance of multiple sms, gisteresis 
-			      if(0 == enter_flag_critical)
+        if (1 == key_ready)
+        {
+            for (j = TM_UID_OFFSET; j < (TM_UID_OFFSET + TM_UID_LEN); j++)
             {
-				        snapshot();
-				        snprintf(str_common, sizeof(str_common), "Critical\r\n");
-	              USART_Puts(USART2, str_common);
+                // take bit in the middle 0x08 = 0b00001000
+                key |= ((tm_buf[j] & 0x08) >> 3) << (j-TM_UID_OFFSET);
+            }
+            if (0 != key)
+            {
+                snprintf(str_common, sizeof(str_common), "--------\r\n%d\r\n--------\r\n", key);
+                USART_Puts(USART2, str_common);
+                #if PRINT_HARD_DEBUG
+                    snprintf(str_common, sizeof(str_common), "%02X\r\n", catch_byte);
+                    USART_Puts(USART2, str_common);
+                #endif
+                key_for_gsm = key;
+            }
+			
+            USART3_Init(9600);
+            USART_ITConfig(USART3, USART_IT_RXNE, ENABLE);
+			
+            key_ready = 0;
+            tm_buf[0] = 0;
+            key = 0;
+        }
+				
+        if (i == 40) GSM_power_on();
+		
+        // every 50 cycles check GSM module
+        if((i%50) == 0)
+        {
+            USART_Puts(USART1, "AT+CSQ\r\n");
+        }
+        read_adc_inj(adcValue);
+        // convert to BAC in mg/L
+        calc_alcohol(adcValue, &BAC_1, &BAC_2, &BAC_3);
+        calc_mean(&mean_1, &mean_2, &mean_3, mean_num, MQ_1, MQ_2, MQ_3);
+        snprintf(str_common, sizeof(str_common), "%04d %04d %04d %04d %f %f %f %f %f %f\r\n", i, adcValue[0], adcValue[1], adcValue[2], BAC_1, BAC_2, BAC_3, mean_1, mean_2, mean_3);
+        USART_Puts(USART2, str_common);
+        if((BAC_1 > alco_critical) || (BAC_2 > alco_critical) || (BAC_3 > alco_critical))
+        {
+            STM32vldiscovery_LEDOn(COOLER);
+            cooler_on = 1;
+            cooler_counter = 0;
+			
+            to_neutral_cnt = 0;
+            candidate = 0;
+            breath_allow = 0;
+            // for avoidance of multiple sms, gisteresis 
+            if(0 == enter_flag_critical)
+            {
+                snapshot();
+                snprintf(str_common, sizeof(str_common), "Critical\r\n");
+                USART_Puts(USART2, str_common);
 				        USART_Puts(USART1, "AT+CMGS=\"+79992213151\"\r\n");
 				        //USART_Puts(USART1, "AT+CMGS=\"+79531701527\"\r\n");
 				        enter_flag_critical = 1;
@@ -293,7 +293,7 @@ void USART3_IRQHandler(void)
 		    }
 		    else if (1 == presence_ok)
 		    {
-			      tm_buf_ptr++;
+			    tm_buf_ptr++;
 		    }
 		    if ((1 == presence_ok) && (ONE_WIRE_PACKET_LEN == tm_buf_ptr))
 		    {
