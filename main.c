@@ -12,9 +12,11 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
-#define PRINT_HARD_DEBUG    0 
+#define PRINT_HARD_DEBUG    0
+#define FAST_FIELD_DEBUG    1
 
 #define COOLER_TIME         (1500)
+#define GSM_REPLY_TIME      (1000)
 #define TM_UID_OFFSET       (1 + 16)  // byte related to reset/presense (1) + 0x33 command (8) + 0x01 byte (8)
 #define TM_UID_LEN          (48)
 #define ONE_WIRE_PACKET_LEN (72)  // 1 byte command + 8 byte ID
@@ -24,6 +26,9 @@ uint32_t i = 0;  // main loop increment
 // cooler switch on/off variables
 uint32_t cooler_counter = 0;
 uint8_t cooler_on = 0;
+// gsm stability variables
+uint32_t gsm_reply_counter = 0;
+uint8_t reply_from_gsm_ok_it_enable = 1;
 
 char str_common[100], str_sms[30];      // debug print buf
 uint8_t rx_buf[70] = {0};  // buf for UART stream from GSM shield
@@ -39,6 +44,7 @@ uint32_t key[2], key_for_gsm[2];
 uint8_t index = 0;
 uint8_t bit_pos = 0;
 uint8_t entering = 0;
+uint8_t breath_ok = 0;
 uint8_t card_touch = 0;
 // alcohol breath detection logic variables
 uint8_t enter_flag_critical = 0, enter_flag = 0;
@@ -80,6 +86,7 @@ int main(void)
     NVIC_EnableIRQ(USART1_IRQn);
     USART_ITConfig(USART2, USART_IT_RXNE, ENABLE);
     NVIC_EnableIRQ(USART2_IRQn);
+    reply_from_gsm_ok_it_enable = 1;
 
     /* Initialize Leds LD3 (C9) and LD4 (C8) mounted on STM32VLDISCOVERY board */
     led_init();
@@ -92,7 +99,9 @@ int main(void)
     STM32vldiscovery_LEDOff(MAIN_GREEN);
 	
     GSM_Pin_Init();
-    //pre_main_delay();
+    #if FAST_FIELD_DEBUG
+        pre_main_delay();
+    #endif
 	
     while (1)
     {
@@ -121,30 +130,29 @@ int main(void)
                     snprintf(str_common, sizeof(str_common), "%02X\r\n", catch_byte);
                     USART_Puts(USART3, str_common);
                 #endif
-
-                USART_Puts(USART1, "AT+CMGS=\"+79992213151\"\r\n");
-                //USART_Puts(USART1, "AT+CMGS=\"+79531701527\"\r\n");
+   
                 sms_flag = 1;
                 entering = 1;
                 card_touch = 1;
+                USART_Puts(USART1, "AT+CMGS=\"+79992213151\"\r\n");
             }
-			
-            //USART2_Init(9600);
-            //USART_ITConfig(USART2, USART_IT_RXNE, ENABLE);
 			
             key_ready = 0;
             tm_buf[0] = 0;
             key[0] = 0;
             key[1] = 0;
         }
-				
-        //if (i == 40) GSM_power_on();
+
+		#if FAST_FIELD_DEBUG		
+            if (i == 40) GSM_power_on();
+        #endif
 		
         // every 50 cycles check GSM module
         #if PRINT_HARD_DEBUG
             if((i%50) == 0)
             {
                 USART_ITConfig(USART2, USART_IT_RXNE, DISABLE);
+                reply_from_gsm_ok_it_enable = 0;
                 USART_Puts(USART1, "AT+CSQ\r\n");
             }
         #endif
@@ -168,10 +176,10 @@ int main(void)
             {
                 snapshot();
                 USART_ITConfig(USART2, USART_IT_RXNE, DISABLE);
+                reply_from_gsm_ok_it_enable = 0;
                 snprintf(str_common, sizeof(str_common), "Critical\r\n");
                 USART_Puts(USART3, str_common);
                 USART_Puts(USART1, "AT+CMGS=\"+79992213151\"\r\n");
-                //USART_Puts(USART1, "AT+CMGS=\"+79531701527\"\r\n");
                 enter_flag_critical = 1;
                 sms_flag = 1;
                 STM32vldiscovery_LEDOff(LED_GREEN);
@@ -191,6 +199,10 @@ int main(void)
             if (5 == candidate_cnt)
             {
                 STM32vldiscovery_LEDOn(COOLER);
+                USART_ITConfig(USART2, USART_IT_RXNE, DISABLE);
+                reply_from_gsm_ok_it_enable = 0;
+                breath_ok = 1;
+                USART_Puts(USART1, "AT+CMGS=\"+79992213151\"\r\n");
                 cooler_on = 1;
                 cooler_counter = 0;
 				
@@ -272,8 +284,13 @@ int main(void)
                 #endif
                 if (1 == entering)
                 {
-                  snprintf(str_alarm, sizeof(str_alarm), "%s%c", str_sms, A);
-                  entering = 0;
+                    snprintf(str_alarm, sizeof(str_alarm), "%s%c", str_sms, A);
+                    entering = 0;
+                }
+                else if (1 == breath_ok)
+                {
+                    snprintf(str_alarm, sizeof(str_alarm), "%s OK%c", str_sms, A);
+                    breath_ok = 0;
                 }
                 else
                 {
@@ -286,6 +303,7 @@ int main(void)
             rx_buf_ptr = 0;
             USART2_Init(9600);
             USART_ITConfig(USART2, USART_IT_RXNE, ENABLE);
+            reply_from_gsm_ok_it_enable = 1;
         }
 
         if (cooler_on == 1)
@@ -297,6 +315,20 @@ int main(void)
                 cooler_counter = 0;
                 STM32vldiscovery_LEDOff(COOLER);
             }
+        }
+        if (reply_from_gsm_ok_it_enable == 0)
+        {
+            gsm_reply_counter++;
+            if (gsm_reply_counter == GSM_REPLY_TIME)
+            {
+                USART2_Init(9600);
+                USART_ITConfig(USART2, USART_IT_RXNE, ENABLE);
+                reply_from_gsm_ok_it_enable = 1;
+            }
+        }
+        else
+        {
+          gsm_reply_counter = 0; 
         }
     }
 }
@@ -333,7 +365,7 @@ void USART2_IRQHandler(void)
             tm_buf_ptr = 0;
             key_ready = 1;
             USART_ITConfig(USART2, USART_IT_RXNE, DISABLE);
-            //USART3_Init(9600);
+            reply_from_gsm_ok_it_enable = 0;
         }
         USART_ClearITPendingBit(USART2, USART_IT_RXNE);
     }
