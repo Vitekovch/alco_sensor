@@ -112,7 +112,7 @@ void USART1_Init()
 	USART_Cmd(USART1, ENABLE);
 }
 
-void USART2_Init(void)
+void USART2_Init(uint32_t baudrate)
 {
 	// Init USART 2
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
@@ -127,7 +127,7 @@ void USART2_Init(void)
 	GPIO_Init(GPIOA, &GPIO_InitStructure);
 	
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART2, ENABLE);
-	USART_InitStruct.USART_BaudRate = 9600;
+	USART_InitStruct.USART_BaudRate = baudrate;
 	USART_InitStruct.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
   USART_InitStruct.USART_Mode = USART_Mode_Tx | USART_Mode_Rx;
 	USART_InitStruct.USART_Parity = USART_Parity_No;
@@ -140,7 +140,12 @@ void USART2_Init(void)
 void USART3_Init(uint32_t baudrate)
 {
 	// Init USART
-	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
+RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
+GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10;
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_Init(GPIOB, &GPIO_InitStructure);
+
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_11;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
@@ -149,7 +154,7 @@ void USART3_Init(uint32_t baudrate)
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART3, ENABLE);
 	USART_InitStruct.USART_BaudRate = baudrate;
 	USART_InitStruct.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
-  USART_InitStruct.USART_Mode = USART_Mode_Rx;
+  USART_InitStruct.USART_Mode = USART_Mode_Tx | USART_Mode_Rx;
 	USART_InitStruct.USART_Parity = USART_Parity_No;
 	USART_InitStruct.USART_StopBits = USART_StopBits_1;
 	USART_InitStruct.USART_WordLength = USART_WordLength_8b;
@@ -205,13 +210,16 @@ void snapshot()
 void door_open()
 {
 	GPIO_InitStructure.GPIO_Pin = DOOR_PIN;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_OD;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_Init(GPIOC, &GPIO_InitStructure);
 	
 	STM32vldiscovery_LEDOff(DOOR);
 	Delay(0xAAFFFF);
 	STM32vldiscovery_LEDOn(DOOR);
+    Delay(0xAAFFFF);
+    Delay(0xAAFFFF);
+    Delay(0xAAFFFF);
 	
 	GPIO_InitStructure.GPIO_Pin = DOOR_PIN;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
@@ -263,6 +271,7 @@ void led_init()
 	STM32vldiscovery_LEDInit(MAIN_GREEN);
 	STM32vldiscovery_LEDInit(MAIN_BLUE);
 	STM32vldiscovery_LEDInit(COOLER);
+    STM32vldiscovery_LEDInit(VOLTS_REF_3_3);
 }
 
 void calc_alcohol(uint16_t *adcValue, double *BAC_1, double *BAC_2, double *BAC_3)

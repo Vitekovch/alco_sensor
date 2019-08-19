@@ -22,9 +22,9 @@ void blink_green(void)
 	for (i = 0; i < 5; i++)
 	{
 		STM32vldiscovery_LEDOn(LED_GREEN);
-    Delay(0x0FFFFF);
+    Delay(0x0AFFFF);
 	  STM32vldiscovery_LEDOff(LED_GREEN);
-    Delay(0x0FFFFF);
+    Delay(0x0AFFFF);
 	}
 }
 
@@ -44,12 +44,12 @@ void blink_blue(void)
 
 void main_delay(void)
 {
-	Delay(0x04FFFF);
-	Delay(0x04FFFF);
+	Delay(0x020FFF);
+	Delay(0x02AFFF);
 }
 
 void pre_main_delay(void)
 {
 	Delay(0xFFFFFFF);
-	Delay(0xFFFFFFF);
+	Delay(0xAFFFFFF);
 }
