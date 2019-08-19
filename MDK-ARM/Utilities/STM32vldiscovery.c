@@ -92,17 +92,17 @@ const uint16_t BUTTON_IRQn[BUTTONn] = {USER_BUTTON_EXTI_IRQn};
   */
 void STM32vldiscovery_LEDInit(Led_TypeDef Led)
 {
-  GPIO_InitTypeDef  GPIO_InitStructure;
-  
-  /* Enable the GPIO_LED Clock */
-  RCC_APB2PeriphClockCmd(GPIO_CLK[Led], ENABLE);
+    GPIO_InitTypeDef  GPIO_InitStructure;
+    
+    /* Enable the GPIO_LED Clock */
+    RCC_APB2PeriphClockCmd(GPIO_CLK[Led], ENABLE);
 
-  /* Configure the GPIO_LED pin */
-  GPIO_InitStructure.GPIO_Pin = GPIO_PIN[Led];
-  
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-  GPIO_Init(GPIO_PORT[Led], &GPIO_InitStructure);
+    /* Configure the GPIO_LED pin */
+    GPIO_InitStructure.GPIO_Pin = GPIO_PIN[Led];
+    
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_Init(GPIO_PORT[Led], &GPIO_InitStructure);
 }
 
 /**
@@ -115,7 +115,7 @@ void STM32vldiscovery_LEDInit(Led_TypeDef Led)
   */
 void STM32vldiscovery_LEDOn(Led_TypeDef Led)
 {
-  GPIO_PORT[Led]->BSRR = GPIO_PIN[Led];   
+    GPIO_PORT[Led]->BSRR = GPIO_PIN[Led];   
 }
 
 /**
@@ -128,7 +128,7 @@ void STM32vldiscovery_LEDOn(Led_TypeDef Led)
   */
 void STM32vldiscovery_LEDOff(Led_TypeDef Led)
 {
-  GPIO_PORT[Led]->BRR = GPIO_PIN[Led];   
+    GPIO_PORT[Led]->BRR = GPIO_PIN[Led];   
 }
 
 /**
@@ -141,7 +141,7 @@ void STM32vldiscovery_LEDOff(Led_TypeDef Led)
   */
 void STM32vldiscovery_LEDToggle(Led_TypeDef Led)
 {
-  GPIO_PORT[Led]->ODR ^= GPIO_PIN[Led];
+    GPIO_PORT[Led]->ODR ^= GPIO_PIN[Led];
 }
 
 /**
@@ -158,40 +158,40 @@ void STM32vldiscovery_LEDToggle(Led_TypeDef Led)
   */
 void STM32vldiscovery_PBInit(Button_TypeDef Button, ButtonMode_TypeDef Button_Mode)
 {
-  GPIO_InitTypeDef GPIO_InitStructure;
-  EXTI_InitTypeDef EXTI_InitStructure;
-  NVIC_InitTypeDef NVIC_InitStructure;
+    GPIO_InitTypeDef GPIO_InitStructure;
+    EXTI_InitTypeDef EXTI_InitStructure;
+    NVIC_InitTypeDef NVIC_InitStructure;
 
-  /* Enable the BUTTON Clock */
-  RCC_APB2PeriphClockCmd(BUTTON_CLK[Button] | RCC_APB2Periph_AFIO, ENABLE);
+    /* Enable the BUTTON Clock */
+    RCC_APB2PeriphClockCmd(BUTTON_CLK[Button] | RCC_APB2Periph_AFIO, ENABLE);
 
-  /* Configure Button pin as input floating */
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-  GPIO_InitStructure.GPIO_Pin = BUTTON_PIN[Button];
-  GPIO_Init(BUTTON_PORT[Button], &GPIO_InitStructure);
+    /* Configure Button pin as input floating */
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+    GPIO_InitStructure.GPIO_Pin = BUTTON_PIN[Button];
+    GPIO_Init(BUTTON_PORT[Button], &GPIO_InitStructure);
 
-  if (Button_Mode == BUTTON_MODE_EXTI)
-  {
-    /* Connect Button EXTI Line to Button GPIO Pin */
-    GPIO_EXTILineConfig(BUTTON_PORT_SOURCE[Button], BUTTON_PIN_SOURCE[Button]);
+    if (Button_Mode == BUTTON_MODE_EXTI)
+    {
+        /* Connect Button EXTI Line to Button GPIO Pin */
+        GPIO_EXTILineConfig(BUTTON_PORT_SOURCE[Button], BUTTON_PIN_SOURCE[Button]);
 
-    /* Configure Button EXTI line */
-    EXTI_InitStructure.EXTI_Line = BUTTON_EXTI_LINE[Button];
-    EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
+        /* Configure Button EXTI line */
+        EXTI_InitStructure.EXTI_Line = BUTTON_EXTI_LINE[Button];
+        EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
 
-    EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising;  
+        EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising;  
 
-    EXTI_InitStructure.EXTI_LineCmd = ENABLE;
-    EXTI_Init(&EXTI_InitStructure);
+        EXTI_InitStructure.EXTI_LineCmd = ENABLE;
+        EXTI_Init(&EXTI_InitStructure);
 
-    /* Enable and set Button EXTI Interrupt to the lowest priority */
-    NVIC_InitStructure.NVIC_IRQChannel = BUTTON_IRQn[Button];
-    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x0F;
-    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x0F;
-    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+        /* Enable and set Button EXTI Interrupt to the lowest priority */
+        NVIC_InitStructure.NVIC_IRQChannel = BUTTON_IRQn[Button];
+        NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x0F;
+        NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x0F;
+        NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 
-    NVIC_Init(&NVIC_InitStructure); 
-  }
+        NVIC_Init(&NVIC_InitStructure); 
+    }
 }
 
 /**
@@ -203,7 +203,7 @@ void STM32vldiscovery_PBInit(Button_TypeDef Button, ButtonMode_TypeDef Button_Mo
   */
 uint32_t STM32vldiscovery_PBGetState(Button_TypeDef Button)
 {
-  return GPIO_ReadInputDataBit(BUTTON_PORT[Button], BUTTON_PIN[Button]);
+    return GPIO_ReadInputDataBit(BUTTON_PORT[Button], BUTTON_PIN[Button]);
 }
 
 /**

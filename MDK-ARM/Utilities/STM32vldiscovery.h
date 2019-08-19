@@ -52,23 +52,23 @@ typedef enum
 {
     LED_GREEN      = 0,
     LED_BLUE       = 1,
-	CAMERA         = 2,
-	DOOR           = 3,
-	MAIN_GREEN     = 4,
-	MAIN_BLUE      = 5,
-	COOLER         = 6,
-	GSM            = 7,
+    CAMERA         = 2,
+    DOOR           = 3,
+    MAIN_GREEN     = 4,
+    MAIN_BLUE      = 5,
+    COOLER         = 6,
+    GSM            = 7,
 } Led_TypeDef;
 
 typedef enum 
 {  
-  BUTTON_USER = 0
+    BUTTON_USER = 0
 } Button_TypeDef;
 
 typedef enum 
 {  
-  BUTTON_MODE_GPIO = 0,
-  BUTTON_MODE_EXTI = 1
+    BUTTON_MODE_GPIO = 0,
+    BUTTON_MODE_EXTI = 1
 } ButtonMode_TypeDef;              
 
 /** 

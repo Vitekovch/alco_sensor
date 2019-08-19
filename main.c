@@ -13,7 +13,7 @@
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 #define PRINT_HARD_DEBUG    0
-#define FAST_FIELD_DEBUG    1
+#define PRODUCTION          1
 
 #define COOLER_TIME         (1500)
 #define GSM_REPLY_TIME      (1000)
@@ -99,7 +99,7 @@ int main(void)
     STM32vldiscovery_LEDOff(MAIN_GREEN);
 	
     GSM_Pin_Init();
-    #if FAST_FIELD_DEBUG
+    #if PRODUCTION
         pre_main_delay();
     #endif
 	
@@ -143,7 +143,7 @@ int main(void)
             key[1] = 0;
         }
 
-		#if FAST_FIELD_DEBUG		
+		#if PRODUCTION		
             if (i == 40) GSM_power_on();
         #endif
 		
