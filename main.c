@@ -84,7 +84,6 @@ int main(void)
     /* Initialize Leds LD3 (C9) and LD4 (C8) mounted on STM32VLDISCOVERY board */
     led_init();
     GPIO_Camera_Pin_Init();
-    GPIO_Door_Pin_Init();
 	
     snprintf(str_common, sizeof(str_common), "Start\r\n");
     USART_Puts(USART3, str_common);

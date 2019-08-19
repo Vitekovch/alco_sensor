@@ -172,15 +172,6 @@ void GPIO_Camera_Pin_Init()
 	GPIO_Init(GPIOC, &GPIO_InitStructure);
 }
 
-void GPIO_Door_Pin_Init()
-{
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_Init(GPIOC, &GPIO_InitStructure);
-}
-
 void GSM_Pin_Init()
 {
 	RCC_APB2PeriphClockCmd(GSM_GPIO_CLK, ENABLE);
@@ -209,19 +200,9 @@ void snapshot()
 
 void door_open()
 {
-	GPIO_InitStructure.GPIO_Pin = DOOR_PIN;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_Init(GPIOC, &GPIO_InitStructure);
-	
-	STM32vldiscovery_LEDOff(DOOR);
+    STM32vldiscovery_LEDOff(DOOR);
 	Delay(0xAAFFFF);
 	STM32vldiscovery_LEDOn(DOOR);
-	
-	GPIO_InitStructure.GPIO_Pin = DOOR_PIN;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_Init(GPIOC, &GPIO_InitStructure);
 }
 
 void GSM_power_on()
@@ -268,6 +249,7 @@ void led_init()
 	STM32vldiscovery_LEDInit(MAIN_GREEN);
 	STM32vldiscovery_LEDInit(MAIN_BLUE);
 	STM32vldiscovery_LEDInit(COOLER);
+    STM32vldiscovery_LEDInit(DOOR);
 }
 
 void calc_alcohol(uint16_t *adcValue, double *BAC_1, double *BAC_2, double *BAC_3)

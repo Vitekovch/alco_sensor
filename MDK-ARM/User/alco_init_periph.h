@@ -11,7 +11,6 @@ void USART1_Init(void);
 void USART2_Init(uint32_t baudrate);
 void USART3_Init(uint32_t baudrate);
 void GPIO_Camera_Pin_Init(void);
-void GPIO_Door_Pin_Init(void);
 void GSM_Pin_Init(void);
 void snapshot(void);
 void door_open(void);
