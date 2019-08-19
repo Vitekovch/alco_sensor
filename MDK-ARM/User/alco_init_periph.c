@@ -267,11 +267,10 @@ uint16_t read_adc()
 void led_init()
 {
 	STM32vldiscovery_LEDInit(LED_GREEN);
-  STM32vldiscovery_LEDInit(LED_BLUE);
+    STM32vldiscovery_LEDInit(LED_BLUE);
 	STM32vldiscovery_LEDInit(MAIN_GREEN);
 	STM32vldiscovery_LEDInit(MAIN_BLUE);
 	STM32vldiscovery_LEDInit(COOLER);
-    STM32vldiscovery_LEDInit(VOLTS_REF_3_3);
 }
 
 void calc_alcohol(uint16_t *adcValue, double *BAC_1, double *BAC_2, double *BAC_3)

@@ -91,7 +91,6 @@ int main(void)
     USART_Puts(USART1, "AT\r\n");
     STM32vldiscovery_LEDOff(LED_GREEN);
     STM32vldiscovery_LEDOff(MAIN_GREEN);
-    STM32vldiscovery_LEDOn(VOLTS_REF_3_3);
 	
     GSM_Pin_Init();
     //pre_main_delay();

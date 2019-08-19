@@ -50,15 +50,14 @@
   */
 typedef enum 
 {
-  LED_GREEN      = 0,
-  LED_BLUE       = 1,
+    LED_GREEN      = 0,
+    LED_BLUE       = 1,
 	CAMERA         = 2,
 	DOOR           = 3,
 	MAIN_GREEN     = 4,
 	MAIN_BLUE      = 5,
 	COOLER         = 6,
 	GSM            = 7,
-    VOLTS_REF_3_3  = 8,
 } Led_TypeDef;
 
 typedef enum 
@@ -117,10 +116,6 @@ typedef enum
 #define GSM_PIN                          GPIO_Pin_2 
 #define GSM_GPIO_PORT                    GPIOD
 #define GSM_GPIO_CLK                     RCC_APB2Periph_GPIOD
-
-#define REF_PIN                          GPIO_Pin_0 
-#define REF_GPIO_PORT                    GPIOB
-#define REF_GPIO_CLK                     RCC_APB2Periph_GPIOB
 /**
   * @}
   */ 
