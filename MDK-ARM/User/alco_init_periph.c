@@ -165,18 +165,18 @@ GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10;
 // TODO change for common usage
 void GPIO_Camera_Pin_Init()
 {
-  RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_7;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_Init(GPIOC, &GPIO_InitStructure);
 }
 
 void GPIO_Door_Pin_Init()
 {
-  RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_Init(GPIOC, &GPIO_InitStructure);
 }
@@ -185,7 +185,7 @@ void GSM_Pin_Init()
 {
 	RCC_APB2PeriphClockCmd(GSM_GPIO_CLK, ENABLE);
 	GPIO_InitStructure.GPIO_Pin = GSM_PIN;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_Init(GSM_GPIO_PORT, &GPIO_InitStructure);
 }
@@ -193,7 +193,7 @@ void GSM_Pin_Init()
 void snapshot()
 {
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_7;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_Init(GPIOC, &GPIO_InitStructure);
 	
@@ -202,7 +202,7 @@ void snapshot()
 	STM32vldiscovery_LEDOn(CAMERA);
 	
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_7;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_Init(GPIOC, &GPIO_InitStructure);
 }
@@ -210,19 +210,16 @@ void snapshot()
 void door_open()
 {
 	GPIO_InitStructure.GPIO_Pin = DOOR_PIN;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_OD;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_Init(GPIOC, &GPIO_InitStructure);
 	
 	STM32vldiscovery_LEDOff(DOOR);
 	Delay(0xAAFFFF);
 	STM32vldiscovery_LEDOn(DOOR);
-    Delay(0xAAFFFF);
-    Delay(0xAAFFFF);
-    Delay(0xAAFFFF);
 	
 	GPIO_InitStructure.GPIO_Pin = DOOR_PIN;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_Init(GPIOC, &GPIO_InitStructure);
 }
@@ -230,7 +227,7 @@ void door_open()
 void GSM_power_on()
 {
 	GPIO_InitStructure.GPIO_Pin = GSM_PIN;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_Init(GSM_GPIO_PORT, &GPIO_InitStructure);
 	
@@ -239,7 +236,7 @@ void GSM_power_on()
 	STM32vldiscovery_LEDOn(GSM);
 	
 	GPIO_InitStructure.GPIO_Pin = GSM_PIN;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_Init(GSM_GPIO_PORT, &GPIO_InitStructure);
 }

@@ -84,7 +84,7 @@ typedef enum
 /** @addtogroup STM32vldiscovery_LOW_LEVEL_LED
   * @{
   */
-#define LEDn                             9
+#define LEDn                             8
 #define LED3_PIN                         GPIO_Pin_9  
 #define LED3_GPIO_PORT                   GPIOC
 #define LED3_GPIO_CLK                    RCC_APB2Periph_GPIOC  
