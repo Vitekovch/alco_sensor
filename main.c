@@ -12,11 +12,11 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
-#define PRINT_HARD_DEBUG    0
-#define PRODUCTION          1
+#define PRINT_HARD_DEBUG    1
+#define PRODUCTION          0
 
 #define COOLER_TIME         (1500)
-#define GSM_REPLY_TIME      (1000)
+#define GSM_REPLY_TIME      (390)
 #define TM_UID_OFFSET       (1 + 16)  // byte related to reset/presense (1) + 0x33 command (8) + 0x01 byte (8)
 #define TM_UID_LEN          (48)
 #define ONE_WIRE_PACKET_LEN (72)  // 1 byte command + 8 byte ID
@@ -143,16 +143,20 @@ int main(void)
             key[1] = 0;
         }
 
-		#if PRODUCTION		
+        #if PRODUCTION
             if (i == 40) GSM_power_on();
         #endif
-		
+
         // every 50 cycles check GSM module
         #if PRINT_HARD_DEBUG
-            if((i%50) == 0)
+            if((i%5000) == 0)
             {
                 USART_ITConfig(USART2, USART_IT_RXNE, DISABLE);
                 reply_from_gsm_ok_it_enable = 0;
+                #if PRINT_HARD_DEBUG
+                    snprintf(str_common, sizeof(str_common), "SET IT 0 -----\r\n");
+                    USART_Puts(USART3, str_common);
+                #endif
                 USART_Puts(USART1, "AT+CSQ\r\n");
             }
         #endif
@@ -177,6 +181,10 @@ int main(void)
                 snapshot();
                 USART_ITConfig(USART2, USART_IT_RXNE, DISABLE);
                 reply_from_gsm_ok_it_enable = 0;
+                #if PRINT_HARD_DEBUG
+                    snprintf(str_common, sizeof(str_common), "SET IT 0   +++++\r\n");
+                    USART_Puts(USART3, str_common);
+                #endif
                 snprintf(str_common, sizeof(str_common), "Critical\r\n");
                 USART_Puts(USART3, str_common);
                 USART_Puts(USART1, "AT+CMGS=\"+79992213151\"\r\n");
@@ -201,6 +209,10 @@ int main(void)
                 STM32vldiscovery_LEDOn(COOLER);
                 USART_ITConfig(USART2, USART_IT_RXNE, DISABLE);
                 reply_from_gsm_ok_it_enable = 0;
+                #if PRINT_HARD_DEBUG
+                    snprintf(str_common, sizeof(str_common), "SET IT 0 )))))\r\n");
+                    USART_Puts(USART3, str_common);
+                #endif
                 breath_ok = 1;
                 USART_Puts(USART1, "AT+CMGS=\"+79992213151\"\r\n");
                 cooler_on = 1;
@@ -318,17 +330,26 @@ int main(void)
         }
         if (reply_from_gsm_ok_it_enable == 0)
         {
+            //#if PRINT_HARD_DEBUG
+                snprintf(str_common, sizeof(str_common), "IT 0 %d\r\n", gsm_reply_counter);
+                USART_Puts(USART3, str_common);
+            //#endif
             gsm_reply_counter++;
-            if (gsm_reply_counter == GSM_REPLY_TIME)
+            if (gsm_reply_counter >= GSM_REPLY_TIME)
             {
                 USART2_Init(9600);
                 USART_ITConfig(USART2, USART_IT_RXNE, ENABLE);
                 reply_from_gsm_ok_it_enable = 1;
+                gsm_reply_counter = 0; 
             }
         }
         else
         {
-          gsm_reply_counter = 0; 
+            //#if PRINT_HARD_DEBUG
+                snprintf(str_common, sizeof(str_common), "IT 1\r\n");
+                USART_Puts(USART3, str_common);
+            //#endif
+            gsm_reply_counter = 0; 
         }
     }
 }
@@ -348,7 +369,7 @@ void USART2_IRQHandler(void)
     if(USART_GetITStatus(USART2, USART_IT_RXNE) != RESET)
     {
         tm_buf[tm_buf_ptr] = (uint8_t) USART_ReceiveData(USART2);
-        if ((0xE0 != tm_buf[tm_buf_ptr]) && (0xFF != tm_buf[tm_buf_ptr]) && (0x00 != tm_buf[tm_buf_ptr]) && (0 == presence_ok))
+        if ((0xE0 != tm_buf[tm_buf_ptr]) && (0xFF != tm_buf[tm_buf_ptr]) && (0x00 == (tm_buf[tm_buf_ptr] & 0x0F)) && (0 == presence_ok))
         {
             catch_byte = tm_buf[tm_buf_ptr];
             tm_buf_ptr++;
@@ -365,7 +386,7 @@ void USART2_IRQHandler(void)
             tm_buf_ptr = 0;
             key_ready = 1;
             USART_ITConfig(USART2, USART_IT_RXNE, DISABLE);
-            reply_from_gsm_ok_it_enable = 0;
+            //reply_from_gsm_ok_it_enable = 0;
         }
         USART_ClearITPendingBit(USART2, USART_IT_RXNE);
     }
