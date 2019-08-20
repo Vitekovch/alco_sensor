@@ -16,7 +16,7 @@
 #define PRODUCTION          0
 
 #define COOLER_TIME         (1500)
-#define GSM_REPLY_TIME      (390)
+#define GSM_REPLY_TIME      (50)
 #define TM_UID_OFFSET       (1 + 16)  // byte related to reset/presense (1) + 0x33 command (8) + 0x01 byte (8)
 #define TM_UID_LEN          (48)
 #define ONE_WIRE_PACKET_LEN (72)  // 1 byte command + 8 byte ID
@@ -369,7 +369,11 @@ void USART2_IRQHandler(void)
     if(USART_GetITStatus(USART2, USART_IT_RXNE) != RESET)
     {
         tm_buf[tm_buf_ptr] = (uint8_t) USART_ReceiveData(USART2);
-        if ((0xE0 != tm_buf[tm_buf_ptr]) && (0xFF != tm_buf[tm_buf_ptr]) && (0x00 == (tm_buf[tm_buf_ptr] & 0x0F)) && (0 == presence_ok))
+        if ((0xE0 != tm_buf[tm_buf_ptr]) &&
+            (0xFF != tm_buf[tm_buf_ptr]) &&
+            (0x00 != tm_buf[tm_buf_ptr]) &&
+            (0x00 == (tm_buf[tm_buf_ptr] & 0x0F)) &&
+               (0 == presence_ok))
         {
             catch_byte = tm_buf[tm_buf_ptr];
             tm_buf_ptr++;
@@ -386,7 +390,7 @@ void USART2_IRQHandler(void)
             tm_buf_ptr = 0;
             key_ready = 1;
             USART_ITConfig(USART2, USART_IT_RXNE, DISABLE);
-            //reply_from_gsm_ok_it_enable = 0;
+            reply_from_gsm_ok_it_enable = 0;
         }
         USART_ClearITPendingBit(USART2, USART_IT_RXNE);
     }
