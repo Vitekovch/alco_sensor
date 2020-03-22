@@ -20,7 +20,7 @@ static const int    ADC_resolution = 4096;
 
 void sdk_Init(void)
 {
-	/*!< At this stage the microcontroller clock setting is already configured, 
+    /*!< At this stage the microcontroller clock setting is already configured, 
        this is done through SystemInit() function which is called from startup
        file (startup_stm32f10x_xx.s) before to branch to application main.
        To reconfigure the default setting of SystemInit() function, refer to
@@ -30,198 +30,179 @@ void sdk_Init(void)
   /* Configure all unused GPIO port pins in Analog Input mode (floating input
      trigger OFF), this will reduce the power consumption and increase the device
      immunity against EMI/EMC *************************************************/
-  RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA | RCC_APB2Periph_GPIOB |
-                         RCC_APB2Periph_GPIOC | RCC_APB2Periph_GPIOD |
-                         RCC_APB2Periph_GPIOE, ENABLE);
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA | RCC_APB2Periph_GPIOB |
+                           RCC_APB2Periph_GPIOC | RCC_APB2Periph_GPIOD |
+                           RCC_APB2Periph_GPIOE, ENABLE);
 
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_All;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AIN;
-  GPIO_Init(GPIOA, &GPIO_InitStructure);
-  GPIO_Init(GPIOB, &GPIO_InitStructure);
-  GPIO_Init(GPIOC, &GPIO_InitStructure);
-  GPIO_Init(GPIOD, &GPIO_InitStructure);
-  GPIO_Init(GPIOE, &GPIO_InitStructure);
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_All;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AIN;
+    GPIO_Init(GPIOA, &GPIO_InitStructure);
+    GPIO_Init(GPIOB, &GPIO_InitStructure);
+    GPIO_Init(GPIOC, &GPIO_InitStructure);
+    GPIO_Init(GPIOD, &GPIO_InitStructure);
+    GPIO_Init(GPIOE, &GPIO_InitStructure);
 
-  RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA | RCC_APB2Periph_GPIOB |
-                         RCC_APB2Periph_GPIOC | RCC_APB2Periph_GPIOD |
-                         RCC_APB2Periph_GPIOE, DISABLE);
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA | RCC_APB2Periph_GPIOB |
+                           RCC_APB2Periph_GPIOC | RCC_APB2Periph_GPIOD |
+                           RCC_APB2Periph_GPIOE, DISABLE);
 }
 
 void ADC1_Init(void)
 {
-	ADC_InitTypeDef ADC_InitStruct;
-	RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1, ENABLE);
+    ADC_InitTypeDef ADC_InitStruct;
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1, ENABLE);
 
-  ADC_InitStruct.ADC_ContinuousConvMode = DISABLE;
-	ADC_InitStruct.ADC_DataAlign = ADC_DataAlign_Right;
-	ADC_InitStruct.ADC_ExternalTrigConv = DISABLE;
-	ADC_InitStruct.ADC_ExternalTrigConv = ADC_ExternalTrigConv_None;
-	ADC_InitStruct.ADC_Mode = ADC_Mode_Independent;
-	ADC_InitStruct.ADC_NbrOfChannel = 3;
-	ADC_InitStruct.ADC_ScanConvMode = ENABLE;
-	ADC_Init(ADC1, &ADC_InitStruct);
-	ADC_Cmd(ADC1, ENABLE);
-	
-	 ADC_InjectedSequencerLengthConfig(ADC1, 3);
- //+ ADC1 Injected Channel Config
-   ADC_InjectedChannelConfig(ADC1, ADC_Channel_0, 1, ADC_SampleTime_239Cycles5);
-   ADC_InjectedChannelConfig(ADC1, ADC_Channel_1, 2, ADC_SampleTime_239Cycles5);
-	 ADC_InjectedChannelConfig(ADC1, ADC_Channel_4, 3, ADC_SampleTime_239Cycles5);
-	//ADC_RegularChannelConfig(ADC1, ADC_Channel_0, 1, ADC_SampleTime_55Cycles5);
-	
-	ADC_ExternalTrigInjectedConvConfig(ADC1, ADC_ExternalTrigInjecConv_None);
-	
-	//ADC_AutoInjectedConvCmd( ADC1, ENABLE );
-  //ADC_SoftwareStartInjectedConvCmd ( ADC1 , ENABLE ) ;
-	
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AIN;
-	GPIO_Init(GPIOA, &GPIO_InitStructure);
-	
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_1;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AIN;
-	GPIO_Init(GPIOA, &GPIO_InitStructure);
-	
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AIN;
-	GPIO_Init(GPIOA, &GPIO_InitStructure);
+    ADC_InitStruct.ADC_ContinuousConvMode = DISABLE;
+    ADC_InitStruct.ADC_DataAlign = ADC_DataAlign_Right;
+    ADC_InitStruct.ADC_ExternalTrigConv = DISABLE;
+    ADC_InitStruct.ADC_ExternalTrigConv = ADC_ExternalTrigConv_None;
+    ADC_InitStruct.ADC_Mode = ADC_Mode_Independent;
+    ADC_InitStruct.ADC_NbrOfChannel = 3;
+    ADC_InitStruct.ADC_ScanConvMode = ENABLE;
+    ADC_Init(ADC1, &ADC_InitStruct);
+    ADC_Cmd(ADC1, ENABLE);
+    
+    ADC_InjectedSequencerLengthConfig(ADC1, 3);
+    //+ ADC1 Injected Channel Config
+    ADC_InjectedChannelConfig(ADC1, ADC_Channel_0, 1, ADC_SampleTime_239Cycles5);
+    ADC_InjectedChannelConfig(ADC1, ADC_Channel_1, 2, ADC_SampleTime_239Cycles5);
+    ADC_InjectedChannelConfig(ADC1, ADC_Channel_4, 3, ADC_SampleTime_239Cycles5);
+    //ADC_RegularChannelConfig(ADC1, ADC_Channel_0, 1, ADC_SampleTime_55Cycles5);
+
+    ADC_ExternalTrigInjectedConvConfig(ADC1, ADC_ExternalTrigInjecConv_None);
+
+    //ADC_AutoInjectedConvCmd( ADC1, ENABLE );
+    //ADC_SoftwareStartInjectedConvCmd ( ADC1 , ENABLE ) ;
+    
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AIN;
+    GPIO_Init(GPIOA, &GPIO_InitStructure);
+    
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_1;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AIN;
+    GPIO_Init(GPIOA, &GPIO_InitStructure);
+    
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AIN;
+    GPIO_Init(GPIOA, &GPIO_InitStructure);
 }
 
 void USART1_Init()
 {
-	// Init USART
-	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_Init(GPIOA, &GPIO_InitStructure);
-	
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_Init(GPIOA, &GPIO_InitStructure);
-	
-	RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE);
-	USART_InitStruct.USART_BaudRate = 9600;
-	USART_InitStruct.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
-  USART_InitStruct.USART_Mode = USART_Mode_Tx | USART_Mode_Rx;
-	USART_InitStruct.USART_Parity = USART_Parity_No;
-	USART_InitStruct.USART_StopBits = USART_StopBits_1;
-	USART_InitStruct.USART_WordLength = USART_WordLength_8b;
-	USART_Init(USART1, &USART_InitStruct);
-	USART_Cmd(USART1, ENABLE);
+    // Init USART
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_Init(GPIOA, &GPIO_InitStructure);
+
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_Init(GPIOA, &GPIO_InitStructure);
+
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE);
+    USART_InitStruct.USART_BaudRate = 9600;
+    USART_InitStruct.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
+    USART_InitStruct.USART_Mode = USART_Mode_Tx | USART_Mode_Rx;
+    USART_InitStruct.USART_Parity = USART_Parity_No;
+    USART_InitStruct.USART_StopBits = USART_StopBits_1;
+    USART_InitStruct.USART_WordLength = USART_WordLength_8b;
+    USART_Init(USART1, &USART_InitStruct);
+    USART_Cmd(USART1, ENABLE);
 }
 
 void USART2_Init(uint32_t baudrate)
 {
-	// Init USART 2
-	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_Init(GPIOA, &GPIO_InitStructure);
-	
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_3;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_Init(GPIOA, &GPIO_InitStructure);
-	
-	RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART2, ENABLE);
-	USART_InitStruct.USART_BaudRate = baudrate;
-	USART_InitStruct.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
-  USART_InitStruct.USART_Mode = USART_Mode_Tx | USART_Mode_Rx;
-	USART_InitStruct.USART_Parity = USART_Parity_No;
-	USART_InitStruct.USART_StopBits = USART_StopBits_1;
-	USART_InitStruct.USART_WordLength = USART_WordLength_8b;
-	USART_Init(USART2, &USART_InitStruct);
-	USART_Cmd(USART2, ENABLE);
+    // Init USART 2
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_Init(GPIOA, &GPIO_InitStructure);
+
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_3;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_Init(GPIOA, &GPIO_InitStructure);
+
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART2, ENABLE);
+    USART_InitStruct.USART_BaudRate = baudrate;
+    USART_InitStruct.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
+    USART_InitStruct.USART_Mode = USART_Mode_Tx | USART_Mode_Rx;
+    USART_InitStruct.USART_Parity = USART_Parity_No;
+    USART_InitStruct.USART_StopBits = USART_StopBits_1;
+    USART_InitStruct.USART_WordLength = USART_WordLength_8b;
+    USART_Init(USART2, &USART_InitStruct);
+    USART_Cmd(USART2, ENABLE);
 }
 
 void USART3_Init(uint32_t baudrate)
 {
-	// Init USART
-RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
-GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_Init(GPIOB, &GPIO_InitStructure);
+    // Init USART
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_Init(GPIOB, &GPIO_InitStructure);
 
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_11;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_Init(GPIOB, &GPIO_InitStructure);
-	
-	RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART3, ENABLE);
-	USART_InitStruct.USART_BaudRate = baudrate;
-	USART_InitStruct.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
-  USART_InitStruct.USART_Mode = USART_Mode_Tx | USART_Mode_Rx;
-	USART_InitStruct.USART_Parity = USART_Parity_No;
-	USART_InitStruct.USART_StopBits = USART_StopBits_1;
-	USART_InitStruct.USART_WordLength = USART_WordLength_8b;
-	USART_Init(USART3, &USART_InitStruct);
-	USART_Cmd(USART3, ENABLE);
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_11;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_Init(GPIOB, &GPIO_InitStructure);
+    
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART3, ENABLE);
+    USART_InitStruct.USART_BaudRate = baudrate;
+    USART_InitStruct.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
+    USART_InitStruct.USART_Mode = USART_Mode_Tx | USART_Mode_Rx;
+    USART_InitStruct.USART_Parity = USART_Parity_No;
+    USART_InitStruct.USART_StopBits = USART_StopBits_1;
+    USART_InitStruct.USART_WordLength = USART_WordLength_8b;
+    USART_Init(USART3, &USART_InitStruct);
+    USART_Cmd(USART3, ENABLE);
 }
 
 // TODO change for common usage
 void GPIO_Camera_Pin_Init()
 {
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_7;
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_7;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_Init(GPIOC, &GPIO_InitStructure);
-}
-
-void GPIO_Door_Pin_Init()
-{
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_Init(GPIOC, &GPIO_InitStructure);
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_Init(GPIOC, &GPIO_InitStructure);
 }
 
 void GSM_Pin_Init()
 {
-	RCC_APB2PeriphClockCmd(GSM_GPIO_CLK, ENABLE);
-	GPIO_InitStructure.GPIO_Pin = GSM_PIN;
+    RCC_APB2PeriphClockCmd(GSM_GPIO_CLK, ENABLE);
+    GPIO_InitStructure.GPIO_Pin = GSM_PIN;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_Init(GSM_GPIO_PORT, &GPIO_InitStructure);
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_Init(GSM_GPIO_PORT, &GPIO_InitStructure);
 }
 
 void snapshot()
 {
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_7;
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_7;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_Init(GPIOC, &GPIO_InitStructure);
-	
-	STM32vldiscovery_LEDOff(CAMERA);
-	Delay(0xAAFFFF);
-	STM32vldiscovery_LEDOn(CAMERA);
-	
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_7;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_Init(GPIOC, &GPIO_InitStructure);
+
+    STM32vldiscovery_LEDOff(CAMERA);
+    Delay(0xAAFFFF);
+    STM32vldiscovery_LEDOn(CAMERA);
+
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_7;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_Init(GPIOC, &GPIO_InitStructure);
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_Init(GPIOC, &GPIO_InitStructure);
 }
 
 void door_open()
 {
-	GPIO_InitStructure.GPIO_Pin = DOOR_PIN;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_Init(GPIOC, &GPIO_InitStructure);
-	
-	STM32vldiscovery_LEDOff(DOOR);
-	Delay(0xAAFFFF);
-	STM32vldiscovery_LEDOn(DOOR);
-	
-	GPIO_InitStructure.GPIO_Pin = DOOR_PIN;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_Init(GPIOC, &GPIO_InitStructure);
+    STM32vldiscovery_LEDOn(DOOR);
+    Delay(0xAAFFFF);
+    STM32vldiscovery_LEDOff(DOOR);
 }
 
 void GSM_power_on()
@@ -268,6 +249,8 @@ void led_init()
 	STM32vldiscovery_LEDInit(MAIN_GREEN);
 	STM32vldiscovery_LEDInit(MAIN_BLUE);
 	STM32vldiscovery_LEDInit(COOLER);
+    STM32vldiscovery_LEDInit(DOOR);
+    STM32vldiscovery_LEDOff(DOOR);
 }
 
 void calc_alcohol(uint16_t *adcValue, double *BAC_1, double *BAC_2, double *BAC_3)
@@ -307,7 +290,7 @@ void calc_mean(double *in_mean_1, double *in_mean_2, double *in_mean_3, int mean
 	*in_mean_3 = mean_3 / mean_num;
 }
 
-void math(double *MQ_1, double *MQ_2, double *MQ_3, int mean_num, double BAC_1, double BAC_2, double BAC_3)
+void push_to_alco_value_buf(double *MQ_1, double *MQ_2, double *MQ_3, int mean_num, double BAC_1, double BAC_2, double BAC_3)
 {
 	static uint8_t iterator = 0;
 	MQ_1[iterator] = BAC_1;

@@ -12,9 +12,13 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
-#define PRINT_HARD_DEBUG    0 
+#define SMS_AT_STRING       "AT+CMGS=\"+79992213151\"\r\n"
+
+#define PRINT_HARD_DEBUG    0
+#define PRODUCTION          1
 
 #define COOLER_TIME         (1500)
+#define GSM_REPLY_TIME      (30)
 #define TM_UID_OFFSET       (1 + 16)  // byte related to reset/presense (1) + 0x33 command (8) + 0x01 byte (8)
 #define TM_UID_LEN          (48)
 #define ONE_WIRE_PACKET_LEN (72)  // 1 byte command + 8 byte ID
@@ -24,6 +28,9 @@ uint32_t i = 0;  // main loop increment
 // cooler switch on/off variables
 uint32_t cooler_counter = 0;
 uint8_t cooler_on = 0;
+// gsm stability variables
+uint32_t gsm_reply_counter = 0;
+uint8_t reply_from_gsm_ok_it_enable = 1;
 
 char str_common[100], str_sms[30];      // debug print buf
 uint8_t rx_buf[70] = {0};  // buf for UART stream from GSM shield
@@ -38,10 +45,11 @@ uint8_t j = 0, catch_byte = 0, presence_ok = 0, key_ready = 0;
 uint32_t key[2], key_for_gsm[2];
 uint8_t index = 0;
 uint8_t bit_pos = 0;
-uint8_t entering = 0;
+uint8_t entering = 0;  // note the moment of sending sms with key ID
+uint8_t breath_ok = 0;  // type of sms - good or alco
 uint8_t card_touch = 0;
 // alcohol breath detection logic variables
-uint8_t enter_flag_critical = 0, enter_flag = 0;
+uint8_t alco_detected = 0, freeze_meas_human_here = 0;
 uint8_t sms_flag = 0, breath_allow = 1;
 uint8_t good_counter = 0, to_neutral_cnt = 0, candidate = 0, candidate_cnt = 0;
 // SMS send buf
@@ -80,11 +88,11 @@ int main(void)
     NVIC_EnableIRQ(USART1_IRQn);
     USART_ITConfig(USART2, USART_IT_RXNE, ENABLE);
     NVIC_EnableIRQ(USART2_IRQn);
+    reply_from_gsm_ok_it_enable = 1;
 
     /* Initialize Leds LD3 (C9) and LD4 (C8) mounted on STM32VLDISCOVERY board */
     led_init();
     GPIO_Camera_Pin_Init();
-    GPIO_Door_Pin_Init();
 	
     snprintf(str_common, sizeof(str_common), "Start\r\n");
     USART_Puts(USART3, str_common);
@@ -93,7 +101,9 @@ int main(void)
     STM32vldiscovery_LEDOff(MAIN_GREEN);
 	
     GSM_Pin_Init();
-    //pre_main_delay();
+    #if PRODUCTION
+        pre_main_delay();
+    #endif
 	
     while (1)
     {
@@ -122,30 +132,33 @@ int main(void)
                     snprintf(str_common, sizeof(str_common), "%02X\r\n", catch_byte);
                     USART_Puts(USART3, str_common);
                 #endif
-
-                USART_Puts(USART1, "AT+CMGS=\"+79992213151\"\r\n");
-                //USART_Puts(USART1, "AT+CMGS=\"+79531701527\"\r\n");
+   
                 sms_flag = 1;
                 entering = 1;
                 card_touch = 1;
+                USART_Puts(USART1, SMS_AT_STRING);
             }
-			
-            //USART2_Init(9600);
-            //USART_ITConfig(USART2, USART_IT_RXNE, ENABLE);
 			
             key_ready = 0;
             tm_buf[0] = 0;
             key[0] = 0;
             key[1] = 0;
         }
-				
-        //if (i == 40) GSM_power_on();
-		
+
+        #if PRODUCTION
+            if (i == 40) GSM_power_on();
+        #endif
+
         // every 50 cycles check GSM module
         #if PRINT_HARD_DEBUG
-            if((i%50) == 0)
+            if((i%5000) == 0)
             {
                 USART_ITConfig(USART2, USART_IT_RXNE, DISABLE);
+                reply_from_gsm_ok_it_enable = 0;
+                #if PRINT_HARD_DEBUG
+                    snprintf(str_common, sizeof(str_common), "SET IT 0 -----\r\n");
+                    USART_Puts(USART3, str_common);
+                #endif
                 USART_Puts(USART1, "AT+CSQ\r\n");
             }
         #endif
@@ -155,7 +168,7 @@ int main(void)
         calc_mean(&mean_1, &mean_2, &mean_3, mean_num, MQ_1, MQ_2, MQ_3);
         snprintf(str_common, sizeof(str_common), "%04d %04d %04d %04d %f %f %f %f %f %f\r\n", i, adcValue[0], adcValue[1], adcValue[2], BAC_1, BAC_2, BAC_3, mean_1, mean_2, mean_3);
         USART_Puts(USART3, str_common);
-        if((BAC_1 > alco_critical) || (BAC_2 > alco_critical) || (BAC_3 > alco_critical))
+        if(((BAC_1 > alco_critical) || (BAC_2 > alco_critical) || (BAC_3 > alco_critical)) && (1 == card_touch))
         {
             STM32vldiscovery_LEDOn(COOLER);
             cooler_on = 1;
@@ -165,15 +178,19 @@ int main(void)
             candidate = 0;
             breath_allow = 0;
             // for avoidance of multiple sms, gisteresis 
-            if(0 == enter_flag_critical)
+            if(0 == alco_detected)
             {
                 snapshot();
                 USART_ITConfig(USART2, USART_IT_RXNE, DISABLE);
+                reply_from_gsm_ok_it_enable = 0;
+                #if PRINT_HARD_DEBUG
+                    snprintf(str_common, sizeof(str_common), "SET IT 0   +++++\r\n");
+                    USART_Puts(USART3, str_common);
+                #endif
                 snprintf(str_common, sizeof(str_common), "Critical\r\n");
                 USART_Puts(USART3, str_common);
-                USART_Puts(USART1, "AT+CMGS=\"+79992213151\"\r\n");
-                //USART_Puts(USART1, "AT+CMGS=\"+79531701527\"\r\n");
-                enter_flag_critical = 1;
+                USART_Puts(USART1, SMS_AT_STRING);
+                alco_detected = 1;
                 sms_flag = 1;
                 STM32vldiscovery_LEDOff(LED_GREEN);
                 STM32vldiscovery_LEDOff(MAIN_GREEN);
@@ -192,6 +209,15 @@ int main(void)
             if (5 == candidate_cnt)
             {
                 STM32vldiscovery_LEDOn(COOLER);
+                USART_ITConfig(USART2, USART_IT_RXNE, DISABLE);
+                reply_from_gsm_ok_it_enable = 0;
+                #if PRINT_HARD_DEBUG
+                    snprintf(str_common, sizeof(str_common), "SET IT 0 )))))\r\n");
+                    USART_Puts(USART3, str_common);
+                #endif
+                breath_ok = 1;
+                USART_Puts(USART1, SMS_AT_STRING);
+                sms_flag = 1;
                 cooler_on = 1;
                 cooler_counter = 0;
 				
@@ -216,7 +242,7 @@ int main(void)
 
             to_neutral_cnt = 0;
 
-            if (0 == enter_flag_critical)
+            if (0 == alco_detected)
             {
                 good_counter++;
                 #if PRINT_HARD_DEBUG
@@ -230,7 +256,7 @@ int main(void)
                     good_counter = 0;
                     candidate = 1;
                 }
-                enter_flag = 1;
+                freeze_meas_human_here = 1;
             }
         }
         else
@@ -243,8 +269,8 @@ int main(void)
             to_neutral_cnt++;
             if (15 == to_neutral_cnt)
             {
-                enter_flag_critical = 0;
-                enter_flag = 0;
+                alco_detected = 0;
+                freeze_meas_human_here = 0;
                 to_neutral_cnt = 0;
                 good_counter = 0;
                 candidate = 0;
@@ -253,10 +279,10 @@ int main(void)
         }
 
         green_light_for_next_breath(breath_allow);
-
-        if((0 == enter_flag) && (0 == enter_flag_critical))
+        // freeze measurements during breath
+        if((0 == freeze_meas_human_here) && (0 == alco_detected))
         {
-            math(MQ_1, MQ_2, MQ_3, mean_num, BAC_1, BAC_2, BAC_3);
+            push_to_alco_value_buf(MQ_1, MQ_2, MQ_3, mean_num, BAC_1, BAC_2, BAC_3);
         }
 
         if((((rx_buf[rx_buf_ptr-2] == '>') && (rx_buf[rx_buf_ptr-1] == ' ')) && (1 == sms_flag)) ||
@@ -273,8 +299,13 @@ int main(void)
                 #endif
                 if (1 == entering)
                 {
-                  snprintf(str_alarm, sizeof(str_alarm), "%s%c", str_sms, A);
-                  entering = 0;
+                    snprintf(str_alarm, sizeof(str_alarm), "%s%c", str_sms, A);
+                    entering = 0;
+                }
+                else if (1 == breath_ok)
+                {
+                    snprintf(str_alarm, sizeof(str_alarm), "%s OK%c", str_sms, A);
+                    breath_ok = 0;
                 }
                 else
                 {
@@ -287,6 +318,7 @@ int main(void)
             rx_buf_ptr = 0;
             USART2_Init(9600);
             USART_ITConfig(USART2, USART_IT_RXNE, ENABLE);
+            reply_from_gsm_ok_it_enable = 1;
         }
 
         if (cooler_on == 1)
@@ -298,6 +330,29 @@ int main(void)
                 cooler_counter = 0;
                 STM32vldiscovery_LEDOff(COOLER);
             }
+        }
+        if (reply_from_gsm_ok_it_enable == 0)
+        {
+            //#if PRINT_HARD_DEBUG
+                snprintf(str_common, sizeof(str_common), "IT 0 %d\r\n", gsm_reply_counter);
+                USART_Puts(USART3, str_common);
+            //#endif
+            gsm_reply_counter++;
+            if (gsm_reply_counter >= GSM_REPLY_TIME)
+            {
+                USART2_Init(9600);
+                USART_ITConfig(USART2, USART_IT_RXNE, ENABLE);
+                reply_from_gsm_ok_it_enable = 1;
+                gsm_reply_counter = 0; 
+            }
+        }
+        else
+        {
+            //#if PRINT_HARD_DEBUG
+                snprintf(str_common, sizeof(str_common), "IT 1\r\n");
+                USART_Puts(USART3, str_common);
+            //#endif
+            gsm_reply_counter = 0; 
         }
     }
 }
@@ -317,7 +372,11 @@ void USART2_IRQHandler(void)
     if(USART_GetITStatus(USART2, USART_IT_RXNE) != RESET)
     {
         tm_buf[tm_buf_ptr] = (uint8_t) USART_ReceiveData(USART2);
-        if ((0xE0 != tm_buf[tm_buf_ptr]) && (0xFF != tm_buf[tm_buf_ptr]) && (0x00 != tm_buf[tm_buf_ptr]) && (0 == presence_ok))
+        if ((0xE0 != tm_buf[tm_buf_ptr]) &&
+            (0xFF != tm_buf[tm_buf_ptr]) &&
+            (0x00 != tm_buf[tm_buf_ptr]) &&
+            (0x00 == (tm_buf[tm_buf_ptr] & 0x0F)) &&
+               (0 == presence_ok))
         {
             catch_byte = tm_buf[tm_buf_ptr];
             tm_buf_ptr++;
@@ -334,7 +393,7 @@ void USART2_IRQHandler(void)
             tm_buf_ptr = 0;
             key_ready = 1;
             USART_ITConfig(USART2, USART_IT_RXNE, DISABLE);
-            //USART3_Init(9600);
+            reply_from_gsm_ok_it_enable = 0;
         }
         USART_ClearITPendingBit(USART2, USART_IT_RXNE);
     }
