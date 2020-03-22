@@ -12,11 +12,11 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
-#define PRINT_HARD_DEBUG    1
-#define PRODUCTION          0
+#define PRINT_HARD_DEBUG    0
+#define PRODUCTION          1
 
 #define COOLER_TIME         (1500)
-#define GSM_REPLY_TIME      (50)
+#define GSM_REPLY_TIME      (30)
 #define TM_UID_OFFSET       (1 + 16)  // byte related to reset/presense (1) + 0x33 command (8) + 0x01 byte (8)
 #define TM_UID_LEN          (48)
 #define ONE_WIRE_PACKET_LEN (72)  // 1 byte command + 8 byte ID
@@ -215,6 +215,7 @@ int main(void)
                 #endif
                 breath_ok = 1;
                 USART_Puts(USART1, "AT+CMGS=\"+79992213151\"\r\n");
+                sms_flag = 1;
                 cooler_on = 1;
                 cooler_counter = 0;
 				
