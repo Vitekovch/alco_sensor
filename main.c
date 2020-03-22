@@ -12,6 +12,8 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
+#define SMS_AT_STRING       "AT+CMGS=\"+79992213151\"\r\n"
+
 #define PRINT_HARD_DEBUG    0
 #define PRODUCTION          1
 
@@ -43,11 +45,11 @@ uint8_t j = 0, catch_byte = 0, presence_ok = 0, key_ready = 0;
 uint32_t key[2], key_for_gsm[2];
 uint8_t index = 0;
 uint8_t bit_pos = 0;
-uint8_t entering = 0;
-uint8_t breath_ok = 0;
+uint8_t entering = 0;  // note the moment of sending sms with key ID
+uint8_t breath_ok = 0;  // type of sms - good or alco
 uint8_t card_touch = 0;
 // alcohol breath detection logic variables
-uint8_t enter_flag_critical = 0, enter_flag = 0;
+uint8_t alco_detected = 0, freeze_meas_human_here = 0;
 uint8_t sms_flag = 0, breath_allow = 1;
 uint8_t good_counter = 0, to_neutral_cnt = 0, candidate = 0, candidate_cnt = 0;
 // SMS send buf
@@ -134,7 +136,7 @@ int main(void)
                 sms_flag = 1;
                 entering = 1;
                 card_touch = 1;
-                USART_Puts(USART1, "AT+CMGS=\"+79992213151\"\r\n");
+                USART_Puts(USART1, SMS_AT_STRING);
             }
 			
             key_ready = 0;
@@ -176,7 +178,7 @@ int main(void)
             candidate = 0;
             breath_allow = 0;
             // for avoidance of multiple sms, gisteresis 
-            if(0 == enter_flag_critical)
+            if(0 == alco_detected)
             {
                 snapshot();
                 USART_ITConfig(USART2, USART_IT_RXNE, DISABLE);
@@ -187,8 +189,8 @@ int main(void)
                 #endif
                 snprintf(str_common, sizeof(str_common), "Critical\r\n");
                 USART_Puts(USART3, str_common);
-                USART_Puts(USART1, "AT+CMGS=\"+79992213151\"\r\n");
-                enter_flag_critical = 1;
+                USART_Puts(USART1, SMS_AT_STRING);
+                alco_detected = 1;
                 sms_flag = 1;
                 STM32vldiscovery_LEDOff(LED_GREEN);
                 STM32vldiscovery_LEDOff(MAIN_GREEN);
@@ -214,7 +216,7 @@ int main(void)
                     USART_Puts(USART3, str_common);
                 #endif
                 breath_ok = 1;
-                USART_Puts(USART1, "AT+CMGS=\"+79992213151\"\r\n");
+                USART_Puts(USART1, SMS_AT_STRING);
                 sms_flag = 1;
                 cooler_on = 1;
                 cooler_counter = 0;
@@ -240,7 +242,7 @@ int main(void)
 
             to_neutral_cnt = 0;
 
-            if (0 == enter_flag_critical)
+            if (0 == alco_detected)
             {
                 good_counter++;
                 #if PRINT_HARD_DEBUG
@@ -254,7 +256,7 @@ int main(void)
                     good_counter = 0;
                     candidate = 1;
                 }
-                enter_flag = 1;
+                freeze_meas_human_here = 1;
             }
         }
         else
@@ -267,8 +269,8 @@ int main(void)
             to_neutral_cnt++;
             if (15 == to_neutral_cnt)
             {
-                enter_flag_critical = 0;
-                enter_flag = 0;
+                alco_detected = 0;
+                freeze_meas_human_here = 0;
                 to_neutral_cnt = 0;
                 good_counter = 0;
                 candidate = 0;
@@ -278,7 +280,7 @@ int main(void)
 
         green_light_for_next_breath(breath_allow);
         // freeze measurements during breath
-        if((0 == enter_flag) && (0 == enter_flag_critical))
+        if((0 == freeze_meas_human_here) && (0 == alco_detected))
         {
             push_to_alco_value_buf(MQ_1, MQ_2, MQ_3, mean_num, BAC_1, BAC_2, BAC_3);
         }
