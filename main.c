@@ -166,7 +166,7 @@ int main(void)
         calc_mean(&mean_1, &mean_2, &mean_3, mean_num, MQ_1, MQ_2, MQ_3);
         snprintf(str_common, sizeof(str_common), "%04d %04d %04d %04d %f %f %f %f %f %f\r\n", i, adcValue[0], adcValue[1], adcValue[2], BAC_1, BAC_2, BAC_3, mean_1, mean_2, mean_3);
         USART_Puts(USART3, str_common);
-        if((BAC_1 > alco_critical) || (BAC_2 > alco_critical) || (BAC_3 > alco_critical))
+        if(((BAC_1 > alco_critical) || (BAC_2 > alco_critical) || (BAC_3 > alco_critical)) && (1 == card_touch))
         {
             STM32vldiscovery_LEDOn(COOLER);
             cooler_on = 1;
@@ -277,10 +277,10 @@ int main(void)
         }
 
         green_light_for_next_breath(breath_allow);
-
+        // freeze measurements during breath
         if((0 == enter_flag) && (0 == enter_flag_critical))
         {
-            math(MQ_1, MQ_2, MQ_3, mean_num, BAC_1, BAC_2, BAC_3);
+            push_to_alco_value_buf(MQ_1, MQ_2, MQ_3, mean_num, BAC_1, BAC_2, BAC_3);
         }
 
         if((((rx_buf[rx_buf_ptr-2] == '>') && (rx_buf[rx_buf_ptr-1] == ' ')) && (1 == sms_flag)) ||

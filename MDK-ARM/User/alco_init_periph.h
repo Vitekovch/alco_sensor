@@ -19,7 +19,7 @@ void read_adc_inj(uint16_t *adcValue);
 void led_init(void);
 void calc_alcohol   (uint16_t *adcValue, double *BAC_1, double *BAC_2, double *BAC_3);
 void calc_mean      (double *in_mean_1, double *in_mean_2, double *in_mean_3, int mean_num, double *MQ_1, double *MQ_2, double *MQ_3);
-void math           (double *MQ_1, double *MQ_2, double *MQ_3, int mean_num, double BAC_1, double BAC_2, double BAC_3);
+void push_to_alco_value_buf    (double *MQ_1, double *MQ_2, double *MQ_3, int mean_num, double BAC_1, double BAC_2, double BAC_3);
 void alco_array_init(double *MQ_1, double *MQ_2, double *MQ_3, int mean_num);
 void USART_Puts     (USART_TypeDef *USARTx, volatile char *s);
 void green_light_for_next_breath(uint8_t breath_allow);

@@ -290,7 +290,7 @@ void calc_mean(double *in_mean_1, double *in_mean_2, double *in_mean_3, int mean
 	*in_mean_3 = mean_3 / mean_num;
 }
 
-void math(double *MQ_1, double *MQ_2, double *MQ_3, int mean_num, double BAC_1, double BAC_2, double BAC_3)
+void push_to_alco_value_buf(double *MQ_1, double *MQ_2, double *MQ_3, int mean_num, double BAC_1, double BAC_2, double BAC_3)
 {
 	static uint8_t iterator = 0;
 	MQ_1[iterator] = BAC_1;
