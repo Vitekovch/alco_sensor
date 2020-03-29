@@ -109,6 +109,10 @@ int main(void)
     {
         main_delay();
         i++;
+        if (i > 4000000000UL)
+        {
+            i = 100;
+        }
 		
         if (1 == key_ready)
         {
