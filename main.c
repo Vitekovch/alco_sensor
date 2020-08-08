@@ -2,6 +2,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include <stdio.h>
+#include <stdint.h>
 #include "stm32f10x.h"
 #include "STM32vldiscovery.h"
 #include "stm32f10x_conf.h"
@@ -307,19 +308,23 @@ int main(void)
                 #if PRINT_HARD_DEBUG
                     blink_green();
                 #endif
+                bool send_sms = FALSE;
                 if (1 == entering)
                 {
                     snprintf(str_alarm, sizeof(str_alarm), "%s%c", str_sms, ASCII_CODE_26);
                     entering = 0;
+                    send_sms = TRUE;
                 }
                 else if (1 == breath_ok)
                 {
                     snprintf(str_alarm, sizeof(str_alarm), "%s OK%c", str_sms, ASCII_CODE_26);
                     breath_ok = 0;
+                    send_sms = TRUE;
                 }
                 else if (1 == alco_detected)
                 {
-                  snprintf(str_alarm, sizeof(str_alarm), "%s alconavt%c", str_sms, ASCII_CODE_26);
+                    snprintf(str_alarm, sizeof(str_alarm), "%s alconavt%c", str_sms, ASCII_CODE_26);
+                    send_sms = TRUE;
                 }
                 else
                 {
@@ -327,7 +332,11 @@ int main(void)
                     USART_Puts(CONSOLE_USART, str_common);
                 }
                 
-                USART_Puts(GSM_USART, str_alarm);
+                if (TRUE == send_sms)
+                {
+                    USART_Puts(GSM_USART, str_alarm);
+                }
+                
                 sms_flag = 0;
             }
             rx_buf_ptr = 0;
