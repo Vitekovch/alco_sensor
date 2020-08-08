@@ -12,7 +12,14 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
-#define SMS_AT_STRING       "AT+CMGS=\"+79992213151\"\r\n"
+#define GSM_USART            USART1
+#define TM_USART             USART2
+#define CONSOLE_USART        USART3
+
+#define ASCII_CODE_26        0x1A
+
+//#define SMS_AT_STRING       "AT+CMGS=\"+79992213151\"\r\n"
+#define SMS_AT_STRING       "AT+CMGS=\"+79964978596\"\r\n"
 
 #define PRINT_HARD_DEBUG    0
 #define PRODUCTION          1
@@ -84,9 +91,9 @@ int main(void)
     ADC1_Init();
     alco_array_init(MQ_1, MQ_2, MQ_3, mean_num);
 	
-    USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);
+    USART_ITConfig(GSM_USART, USART_IT_RXNE, ENABLE);
     NVIC_EnableIRQ(USART1_IRQn);
-    USART_ITConfig(USART2, USART_IT_RXNE, ENABLE);
+    USART_ITConfig(TM_USART, USART_IT_RXNE, ENABLE);
     NVIC_EnableIRQ(USART2_IRQn);
     reply_from_gsm_ok_it_enable = 1;
 
@@ -95,8 +102,8 @@ int main(void)
     GPIO_Camera_Pin_Init();
 	
     snprintf(str_common, sizeof(str_common), "Start\r\n");
-    USART_Puts(USART3, str_common);
-    USART_Puts(USART1, "AT\r\n");
+    USART_Puts(CONSOLE_USART, str_common);
+    USART_Puts(GSM_USART, "AT\r\n");
     STM32vldiscovery_LEDOff(LED_GREEN);
     STM32vldiscovery_LEDOff(MAIN_GREEN);
 	
@@ -131,16 +138,16 @@ int main(void)
                                                                                                   (key[0] >> 16) & 0xFF,
                                                                                                   (key[0] >> 8) & 0xFF,
                                                                                                   key[0] & 0xFF);
-                USART_Puts(USART3, str_sms);
+                USART_Puts(CONSOLE_USART, str_sms);
                 #if PRINT_HARD_DEBUG
                     snprintf(str_common, sizeof(str_common), "%02X\r\n", catch_byte);
-                    USART_Puts(USART3, str_common);
+                    USART_Puts(CONSOLE_USART, str_common);
                 #endif
    
                 sms_flag = 1;
                 entering = 1;
                 card_touch = 1;
-                USART_Puts(USART1, SMS_AT_STRING);
+                USART_Puts(GSM_USART, SMS_AT_STRING);
             }
 			
             key_ready = 0;
@@ -157,13 +164,13 @@ int main(void)
         #if PRINT_HARD_DEBUG
             if((i%5000) == 0)
             {
-                USART_ITConfig(USART2, USART_IT_RXNE, DISABLE);
+                USART_ITConfig(TM_USART, USART_IT_RXNE, DISABLE);
                 reply_from_gsm_ok_it_enable = 0;
                 #if PRINT_HARD_DEBUG
                     snprintf(str_common, sizeof(str_common), "SET IT 0 -----\r\n");
-                    USART_Puts(USART3, str_common);
+                    USART_Puts(CONSOLE_USART, str_common);
                 #endif
-                USART_Puts(USART1, "AT+CSQ\r\n");
+                USART_Puts(GSM_USART, "AT+CSQ\r\n");
             }
         #endif
         read_adc_inj(adcValue);
@@ -171,7 +178,7 @@ int main(void)
         calc_alcohol(adcValue, &BAC_1, &BAC_2, &BAC_3);
         calc_mean(&mean_1, &mean_2, &mean_3, mean_num, MQ_1, MQ_2, MQ_3);
         snprintf(str_common, sizeof(str_common), "%04d %04d %04d %04d %f %f %f %f %f %f\r\n", i, adcValue[0], adcValue[1], adcValue[2], BAC_1, BAC_2, BAC_3, mean_1, mean_2, mean_3);
-        USART_Puts(USART3, str_common);
+        USART_Puts(CONSOLE_USART, str_common);
         if(((BAC_1 > alco_critical) || (BAC_2 > alco_critical) || (BAC_3 > alco_critical)) && (1 == card_touch))
         {
             STM32vldiscovery_LEDOn(COOLER);
@@ -185,15 +192,15 @@ int main(void)
             if(0 == alco_detected)
             {
                 snapshot();
-                USART_ITConfig(USART2, USART_IT_RXNE, DISABLE);
+                USART_ITConfig(TM_USART, USART_IT_RXNE, DISABLE);
                 reply_from_gsm_ok_it_enable = 0;
                 #if PRINT_HARD_DEBUG
                     snprintf(str_common, sizeof(str_common), "SET IT 0   +++++\r\n");
-                    USART_Puts(USART3, str_common);
+                    USART_Puts(CONSOLE_USART, str_common);
                 #endif
                 snprintf(str_common, sizeof(str_common), "Critical\r\n");
-                USART_Puts(USART3, str_common);
-                USART_Puts(USART1, SMS_AT_STRING);
+                USART_Puts(CONSOLE_USART, str_common);
+                USART_Puts(GSM_USART, SMS_AT_STRING);
                 alco_detected = 1;
                 sms_flag = 1;
                 STM32vldiscovery_LEDOff(LED_GREEN);
@@ -205,7 +212,7 @@ int main(void)
         {
             #if PRINT_HARD_DEBUG
                 snprintf(str_common, sizeof(str_common), "Candidate\r\n");
-                USART_Puts(USART3, str_common);
+                USART_Puts(CONSOLE_USART, str_common);
             #endif
 
             candidate_cnt++;
@@ -213,14 +220,14 @@ int main(void)
             if (5 == candidate_cnt)
             {
                 STM32vldiscovery_LEDOn(COOLER);
-                USART_ITConfig(USART2, USART_IT_RXNE, DISABLE);
+                USART_ITConfig(TM_USART, USART_IT_RXNE, DISABLE);
                 reply_from_gsm_ok_it_enable = 0;
                 #if PRINT_HARD_DEBUG
                     snprintf(str_common, sizeof(str_common), "SET IT 0 )))))\r\n");
-                    USART_Puts(USART3, str_common);
+                    USART_Puts(CONSOLE_USART, str_common);
                 #endif
                 breath_ok = 1;
-                USART_Puts(USART1, SMS_AT_STRING);
+                USART_Puts(GSM_USART, SMS_AT_STRING);
                 sms_flag = 1;
                 cooler_on = 1;
                 cooler_counter = 0;
@@ -232,7 +239,7 @@ int main(void)
                 blink_green();
                 alco_array_init(MQ_1, MQ_2, MQ_3, mean_num);
                 snprintf(str_common, sizeof(str_common), "Door open %s\r\n", str_sms);
-                USART_Puts(USART3, str_common);
+                USART_Puts(CONSOLE_USART, str_common);
             }
         }
         else if(((((BAC_1 - mean_1) > alco_door_open) && ((BAC_2 - mean_2) > alco_door_open)) ||
@@ -241,7 +248,7 @@ int main(void)
         {
             #if PRINT_HARD_DEBUG
                 snprintf(str_common, sizeof(str_common), "State 3\r\n");
-                USART_Puts(USART3, str_common);
+                USART_Puts(CONSOLE_USART, str_common);
             #endif
 
             to_neutral_cnt = 0;
@@ -251,7 +258,7 @@ int main(void)
                 good_counter++;
                 #if PRINT_HARD_DEBUG
                     snprintf(str_common, sizeof(str_common), "good_counter = %d\r\n", good_counter);
-                    USART_Puts(USART3, str_common);
+                    USART_Puts(CONSOLE_USART, str_common);
                 #endif
 
                 if (5 == good_counter)
@@ -267,7 +274,7 @@ int main(void)
         {   
             #if PRINT_HARD_DEBUG
                 snprintf(str_common, sizeof(str_common), "Neutral\r\n");
-                USART_Puts(USART3, str_common);
+                USART_Puts(CONSOLE_USART, str_common);
             #endif
 
             to_neutral_cnt++;
@@ -294,34 +301,38 @@ int main(void)
              (rx_buf[rx_buf_ptr-2] == 0x0D) && (rx_buf[rx_buf_ptr-1] == 0x0A)))
         {
             rx_buf[rx_buf_ptr] = '\0';
-            USART_Puts(USART3, (char *)rx_buf);
+            USART_Puts(CONSOLE_USART, (char *)rx_buf);
             if((rx_buf[rx_buf_ptr-2] == '>') && (rx_buf[rx_buf_ptr-1] == ' '))
             {
-                char A = 0x1A;
                 #if PRINT_HARD_DEBUG
                     blink_green();
                 #endif
                 if (1 == entering)
                 {
-                    snprintf(str_alarm, sizeof(str_alarm), "%s%c", str_sms, A);
+                    snprintf(str_alarm, sizeof(str_alarm), "%s%c", str_sms, ASCII_CODE_26);
                     entering = 0;
                 }
                 else if (1 == breath_ok)
                 {
-                    snprintf(str_alarm, sizeof(str_alarm), "%s OK%c", str_sms, A);
+                    snprintf(str_alarm, sizeof(str_alarm), "%s OK%c", str_sms, ASCII_CODE_26);
                     breath_ok = 0;
+                }
+                else if (1 == alco_detected)
+                {
+                  snprintf(str_alarm, sizeof(str_alarm), "%s alconavt%c", str_sms, ASCII_CODE_26);
                 }
                 else
                 {
-                  snprintf(str_alarm, sizeof(str_alarm), "%s alconavt%c", str_sms, A);
+                    snprintf(str_common, sizeof(str_common), "Strange combination\r\n");
+                    USART_Puts(CONSOLE_USART, str_common);
                 }
                 
-                USART_Puts(USART1, str_alarm);
+                USART_Puts(GSM_USART, str_alarm);
                 sms_flag = 0;
             }
             rx_buf_ptr = 0;
             USART2_Init(9600);
-            USART_ITConfig(USART2, USART_IT_RXNE, ENABLE);
+            USART_ITConfig(TM_USART, USART_IT_RXNE, ENABLE);
             reply_from_gsm_ok_it_enable = 1;
         }
 
@@ -339,13 +350,13 @@ int main(void)
         {
             //#if PRINT_HARD_DEBUG
                 snprintf(str_common, sizeof(str_common), "IT 0 %d\r\n", gsm_reply_counter);
-                USART_Puts(USART3, str_common);
+                USART_Puts(CONSOLE_USART, str_common);
             //#endif
             gsm_reply_counter++;
             if (gsm_reply_counter >= GSM_REPLY_TIME)
             {
                 USART2_Init(9600);
-                USART_ITConfig(USART2, USART_IT_RXNE, ENABLE);
+                USART_ITConfig(TM_USART, USART_IT_RXNE, ENABLE);
                 reply_from_gsm_ok_it_enable = 1;
                 gsm_reply_counter = 0; 
             }
@@ -354,7 +365,7 @@ int main(void)
         {
             //#if PRINT_HARD_DEBUG
                 snprintf(str_common, sizeof(str_common), "IT 1\r\n");
-                USART_Puts(USART3, str_common);
+                USART_Puts(CONSOLE_USART, str_common);
             //#endif
             gsm_reply_counter = 0; 
         }
@@ -363,19 +374,19 @@ int main(void)
 
 void USART1_IRQHandler(void)
 {
-    if(USART_GetITStatus(USART1, USART_IT_RXNE) != RESET)
+    if(USART_GetITStatus(GSM_USART, USART_IT_RXNE) != RESET)
     {
-        USART_ClearITPendingBit(USART1, USART_IT_RXNE);
-        rx_buf[rx_buf_ptr] = (uint8_t) USART_ReceiveData(USART1);
+        USART_ClearITPendingBit(GSM_USART, USART_IT_RXNE);
+        rx_buf[rx_buf_ptr] = (uint8_t) USART_ReceiveData(GSM_USART);
         rx_buf_ptr++;
     }
 }
 
 void USART2_IRQHandler(void)
 {
-    if(USART_GetITStatus(USART2, USART_IT_RXNE) != RESET)
+    if(USART_GetITStatus(TM_USART, USART_IT_RXNE) != RESET)
     {
-        tm_buf[tm_buf_ptr] = (uint8_t) USART_ReceiveData(USART2);
+        tm_buf[tm_buf_ptr] = (uint8_t) USART_ReceiveData(TM_USART);
         if ((0xE0 != tm_buf[tm_buf_ptr]) &&
             (0xFF != tm_buf[tm_buf_ptr]) &&
             (0x00 != tm_buf[tm_buf_ptr]) &&
@@ -396,9 +407,9 @@ void USART2_IRQHandler(void)
             presence_ok = 0;
             tm_buf_ptr = 0;
             key_ready = 1;
-            USART_ITConfig(USART2, USART_IT_RXNE, DISABLE);
+            USART_ITConfig(TM_USART, USART_IT_RXNE, DISABLE);
             reply_from_gsm_ok_it_enable = 0;
         }
-        USART_ClearITPendingBit(USART2, USART_IT_RXNE);
+        USART_ClearITPendingBit(TM_USART, USART_IT_RXNE);
     }
 }
